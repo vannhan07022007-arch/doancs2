@@ -1,0 +1,47 @@
+/* ===== Biến thiết kế (lấy từ mẫu header DLS) ===== */
+:root {
+  --pink: #f06c97;
+  --pink-dark: #d9507e;
+  --pink-soft: #fde8ef;
+  --ink: #111111;
+  --text: #333333;
+  --muted: #a8a8b0;
+  --line: #e6e6ea;
+  --bg: #ffffff;
+  --font: "Roboto", "Segoe UI", Arial, sans-serif;
+  --container: 1280px;
+}
+
+*, *::before, *::after { box-sizing: border-box; }
+
+html { scroll-behavior: smooth; }
+
+body {
+  margin: 0;
+  font-family: var(--font);
+  font-size: 15px;
+  line-height: 1.5;
+  color: var(--text);
+  background: var(--bg);
+}
+
+a { color: inherit; text-decoration: none; }
+ul { margin: 0; padding: 0; list-style: none; }
+button { font: inherit; cursor: pointer; }
+img { max-width: 100%; display: block; }
+
+.container {
+  width: 100%;
+  max-width: var(--container);
+  margin: 0 auto;
+  padding: 0 24px;
+}
+
+:focus-visible {
+  outline: 2px solid var(--pink);
+  outline-offset: 2px;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  * { transition: none !important; animation: none !important; scroll-behavior: auto !important; }
+}

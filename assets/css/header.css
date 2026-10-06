@@ -1,0 +1,316 @@
+/* ==========================================
+   HEADER MAIN STYLES
+   ========================================== */
+.site-header {
+    background-color: #ffffff;
+    border-bottom: 1px solid #f0f0f0;
+    position: sticky; /*giữ header lun co dinh vi tri tren cung trang */
+    top: 0;
+    z-index: 1000; /* đảm bảo header lun nằm trên các phần tử khác */
+}
+
+.header-container {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    padding: 12px 20px;
+    max-width: 1200px;
+    margin: 0 auto;
+    gap: 20px;
+}
+
+/* 1. Logo */
+.header-logo img {
+    height: 75px;
+    width: auto;
+    object-fit: contain;
+    display: block;
+}
+
+/* 2. Thanh tìm kiếm */
+.header-search {
+    position: relative;
+    flex: 1;
+    max-width: 480px;
+}
+
+.search-form {
+    display: flex;
+    align-items: center;
+    border: 1px solid #e2e8f0;
+    border-radius: 25px;
+    padding: 4px 6px 4px 18px;
+    background-color: #ffffff;
+    transition: all 0.2s ease;
+}
+
+.search-form:focus-within {
+    border-color: #f43f5e;
+    box-shadow: 0 0 0 3px rgba(244, 63, 94, 0.1);
+}
+
+.search-form input {
+    width: 100%;
+    border: none;
+    outline: none;
+    font-size: 14px;
+    color: #333333;
+    background: transparent;
+}
+
+.search-form button {
+    border: none;
+    background: transparent;
+    color: #f43f5e;
+    font-size: 16px;
+    cursor: pointer;
+    padding: 6px 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+/* Khung gợi ý AJAX */
+.search-suggestions-box {
+    position: absolute;
+    top: calc(100% + 8px);
+    left: 0;
+    right: 0;
+    background: #ffffff;
+    border-radius: 12px;
+    box-shadow: 0 8px 24px rgba(0, 0, 0, 0.12);
+    display: none;
+    z-index: 100;
+    max-height: 380px;
+    overflow-y: auto;
+}
+
+/* 3. Hotline & Hành động */
+.header-actions {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+}
+
+/* Nút Hotline pill */
+.hotline-btn {
+    display: flex;
+    align-items: center;
+    border: 1.5px solid #f43f5e;
+    border-radius: 30px;
+    padding: 4px 4px 4px 16px;
+    text-decoration: none;
+    transition: background-color 0.2s ease;
+}
+
+.hotline-btn:hover {
+    background-color: #fff1f2;
+}
+
+.hotline-text {
+    display: flex;
+    flex-direction: column;
+    margin-right: 10px;
+    text-align: right;
+}
+
+.hotline-text .sub-text {
+    font-size: 11px;
+    color: #f43f5e;
+}
+
+.hotline-text .main-text {
+    font-size: 13px;
+    font-weight: 700;
+    color: #f43f5e;
+}
+
+.hotline-icon {
+    width: 32px;
+    height: 32px;
+    background-color: #f43f5e;
+    color: #ffffff;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 14px;
+}
+
+/* Nút tròn Icon (Tài khoản & Giỏ hàng) */
+.icon-btn {
+    width: 42px;
+    height: 42px;
+    border-radius: 50%;
+    background-color: #f43f5e;
+    color: #ffffff;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 18px;
+    text-decoration: none;
+    border: none;
+    cursor: pointer;
+    position: relative;
+    transition: transform 0.2s ease, opacity 0.2s ease;
+}
+
+.icon-btn:hover {
+    opacity: 0.9;
+    transform: translateY(-1px);
+}
+
+/* Badge đếm số lượng giỏ hàng */
+.cart-badge {
+    position: absolute;
+    top: -4px;
+    right: -4px;
+    background-color: #111827;
+    color: #ffffff;
+    font-size: 11px;
+    font-weight: bold;
+    min-width: 18px;
+    height: 18px;
+    border-radius: 9px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 0 4px;
+    border: 2px solid #ffffff;
+}
+/* ==========================================
+   MAIN NAVIGATION / MEGA MENU STYLES
+   ========================================== */
+.main-navigation {
+    background-color: #f7315f; /* Màu hồng chủ đạo đúng ảnh mẫu */
+    width: 100%;
+}
+
+.nav-container {
+    max-width: 1200px;
+    margin: 0 auto;
+    padding: 0 15px;
+}
+
+.nav-menu {
+    display: flex;
+    align-items: center;
+    justify-content: center; /* Căn giữa các mục menu */
+    list-style: none;
+    margin: 0;
+    padding: 0;
+}
+
+.nav-item {
+    position: relative;
+}
+
+.nav-link {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 12px 18px;
+    color: #ffffff;
+    font-size: 14px;
+    font-weight: 700;
+    text-decoration: none;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+    white-space: nowrap;
+    transition: background-color 0.2s ease;
+}
+
+.nav-link:hover {
+    background-color: rgba(0, 0, 0, 0.08); /* Hiệu ứng tối nhẹ khi di chuột */
+}
+
+.dropdown-arrow {
+    font-size: 11px;
+    transition: transform 0.2s ease;
+}
+
+.nav-item:hover .dropdown-arrow {
+    transform: rotate(180deg);
+}
+
+/* --- Dropdown Đơn (Simple Dropdown) --- */
+.dropdown-menu {
+    position: absolute;
+    top: 100%;
+    left: 0;
+    background-color: #ffffff;
+    box-shadow: 0 8px 20px rgba(0, 0, 0, 0.15);
+    border-radius: 0 0 8px 8px;
+    list-style: none;
+    padding: 10px 0;
+    margin: 0;
+    min-width: 240px;
+    opacity: 0;
+    visibility: hidden;
+    transform: translateY(10px);
+    transition: all 0.25s ease;
+    z-index: 1100;
+}
+
+.nav-item:hover .dropdown-menu {
+    opacity: 1;
+    visibility: visible;
+    transform: translateY(0);
+}
+
+.dropdown-menu li a {
+    display: block;
+    padding: 10px 20px;
+    color: #333333;
+    font-size: 13px;
+    font-weight: 600;
+    text-decoration: none;
+    transition: all 0.2s ease;
+}
+
+.dropdown-menu li a:hover {
+    background-color: #fff1f2;
+    color: #ff527b;
+    padding-left: 24px;
+}
+
+/* --- Mega Dropdown (Chia cột rộng cho Giày bóng đá) --- */
+.mega-dropdown {
+    display: flex;
+    gap: 30px;
+    padding: 20px 25px;
+    min-width: 620px;
+}
+
+.mega-col {
+    flex: 1;
+}
+
+.mega-col h4 {
+    font-size: 13px;
+    font-weight: 800;
+    color: #111827;
+    margin-bottom: 12px;
+    padding-bottom: 6px;
+    border-bottom: 2px solid #ff527b;
+    text-transform: uppercase;
+}
+
+.mega-col ul {
+    list-style: none;
+    padding: 0;
+    margin: 0;
+}
+
+.mega-col ul li a {
+    padding: 6px 0;
+    font-size: 13px;
+    color: #4b5563;
+    font-weight: 500;
+}
+
+.mega-col ul li a:hover {
+    background-color: transparent;
+    color: #ff527b;
+    padding-left: 4px;
+}
