@@ -1,18 +1,12 @@
 <?php
 require_once dirname(__DIR__) . '/config/config.php';
+require_once dirname(__DIR__) . '/includes/functions.php';
+
 
 $settings = ['hotline' => '0984828392'];
 // Truy vấn lấy danh sách các hãng (brand) không bị trùng lặp từ bảng products
-$brands = [];
-if (isset($conn) && $conn) {
-    $brand_sql = "SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand != ''";
-    $brand_result = mysqli_query($conn, $brand_sql);
-    if ($brand_result) {
-        while ($b_row = mysqli_fetch_assoc($brand_result)) {
-            $brands[] = $b_row['brand'];
-        }
-    }
-}
+
+
 
 // Truy vấn lấy danh sách các loại phụ kiện động từ database
 $accessories = [];
@@ -23,6 +17,26 @@ if (isset($conn) && $conn) {
     if ($acc_result) {
         while ($acc_row = mysqli_fetch_assoc($acc_result)) {
             $accessories[] = $acc_row['brand'];
+        }
+    }
+}
+$display_products = [];
+if (isset($db) && $db) {
+    // Truy vấn bằng PDO để lấy danh sách sản phẩm
+    $sql = "SELECT product_id AS id, product_name AS name, product_code AS sku, brand AS tier_name, price, old_price, main_image AS image FROM products ORDER BY product_id DESC LIMIT 18";
+    $stmt = $db->query($sql);
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($products) {
+        foreach ($products as $row) {
+            $p_id = $row['id'];
+            // Lấy size của sản phẩm bằng PDO
+            $size_stmt = $db->prepare("SELECT GROUP_CONCAT(size_value ORDER BY size_value ASC) AS sizes FROM product_sizes WHERE product_id = ?");
+            $size_stmt->execute([$p_id]);
+            $size_row = $size_stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $row['sizes'] = $size_row['sizes'] ?? '';
+            $display_products[] = $row;
         }
     }
 }
@@ -96,44 +110,61 @@ if (isset($conn) && $conn) {
 
                     <!-- Mục Giày Bóng Đá có menu con -->
                     <li class="has-submenu">
-                        <a href="javascript:void(0);" class="submenu-toggle">
-                            GIÀY BÓNG ĐÁ <span class="arrow">&gt;</span>
-                        </a>
-                        <ul class="sub-menu">
-                            <?php if (!empty($brands)): ?>
-                            <?php foreach ($brands as $brand): ?>
-                            <li>
-                                <a
-                                    href="<?php echo BASE_URL; ?>/pages/category.php?brand=<?php echo urlencode($brand); ?>">
-                                    Giày <?php echo htmlspecialchars($brand); ?>
-                                </a>
-                            </li>
-                            <?php endforeach; ?>
-                            <?php else: ?>
-                            <li><a href="#">Chưa có hãng nào</a></li>
-                            <?php endif; ?>
-                        </ul>
-                    </li>
+    <div class="menu-link-wrapper" style="display: flex; align-items: center; justify-content: space-between;">
+        <!-- 1. Bấm vào chữ: Chuyển đến trang danh mục giày (id = 1), chỉ hiện giày -->
+        <a href="<?php echo BASE_URL; ?>/pages/category.php?id=1" class="category-main-link">
+            GIÀY BÓNG ĐÁ
+        </a>
+        
+        <!-- 2. Bấm vào mũi tên: Chỉ làm nhiệm vụ xổ menu con xuống -->
+        <span class="submenu-toggle arrow" style="cursor: pointer; padding: 0 10px;">&gt;</span>
+    </div>
 
-                    <li class="has-submenu">
-                        <a href="javascript:void(0);" class="submenu-toggle">
-                            PHỤ KIỆN <span class="arrow">&gt;</span>
-                        </a>
-                        <ul class="sub-menu">
-                            <?php if (!empty($accessories)): ?>
-                            <?php foreach ($accessories as $item): ?>
-                            <li>
-                                <a
-                                    href="<?php echo BASE_URL; ?>/pages/category.php?type=phu_kien&brand=<?php echo urlencode($item); ?>">
-                                    <?php echo htmlspecialchars($item); ?>
-                                </a>
-                            </li>
-                            <?php endforeach; ?>
-                            <?php else: ?>
-                            <li><a href="#">Chưa có phụ kiện nào</a></li>
-                            <?php endif; ?>
-                        </ul>
-                    </li>
+    <?php
+    $brands = get_all_brands($db);
+    ?>
+    <ul class="sub-menu" style="display: none;"> <!-- Mặc định ẩn menu con -->
+        <?php if (!empty($brands)): ?>
+        <?php foreach ($brands as $brand): ?>
+        <li>
+            <a href="<?php echo BASE_URL; ?>/pages/category.php?id=1&brand=<?php echo urlencode($brand); ?>">
+                Giày <?php echo htmlspecialchars($brand); ?>
+            </a>
+        </li>
+        <?php endforeach; ?>
+        <?php else: ?>
+        <li><a href="#">Chưa có hãng nào</a></li>
+        <?php endif; ?>
+    </ul>
+</li>
+                        <li class="has-submenu">
+    <div class="menu-link-wrapper" style="display: flex; align-items: center; justify-content: space-between;">
+        <!-- 1. Bấm vào chữ: Chuyển đến trang danh mục phụ kiện (id = 2), chỉ hiện phụ kiện -->
+        <a href="<?php echo BASE_URL; ?>/pages/category.php?id=2" class="category-main-link">
+            PHỤ KIỆN
+        </a>
+        
+        <!-- 2. Bấm vào mũi tên: Chỉ làm nhiệm vụ xổ menu con xuống -->
+        <span class="submenu-toggle arrow" style="cursor: pointer; padding: 0 10px;">&gt;</span>
+    </div>
+
+    <?php 
+    $accessories = get_all_accessories($db); 
+    ?>
+    <ul class="sub-menu" style="display: none;"> <!-- Mặc định ẩn menu con -->
+        <?php if (!empty($accessories)): ?>
+        <?php foreach ($accessories as $item): ?>
+        <li>
+            <a href="<?php echo BASE_URL; ?>/pages/category.php?id=2&brand=<?php echo urlencode($item); ?>">
+                <?php echo htmlspecialchars($item); ?>
+            </a>
+        </li>
+        <?php endforeach; ?>
+        <?php else: ?>
+        <li><a href="#">Chưa có phụ kiện nào</a></li>
+        <?php endif; ?>
+    </ul>
+</li>
 
                     <li class="has-submenu">
                         <a href="javascript:void(0);" class="submenu-toggle">
@@ -203,49 +234,30 @@ if (isset($conn) && $conn) {
         <!-- CỘT PHẢI: Nội dung sản phẩm -->
         <main class="shop-main">
             <div class="product-grid">
-                <!-- Sản phẩm mẫu -->
-                <div class="product-card">
-                    <div class="discount-badge">-26%</div>
-                    <div class="product-img">
-                        <img src="<?php echo BASE_URL; ?>/assets/images/shoe1.png" alt="Giày bóng đá">
-                    </div>
-                    <div class="product-tag">AUTHENTIC - ACADEMY</div>
-                    <h4 class="product-name">GIÀY BÓNG ĐÁ NIKE MERCURIAL VAPOR...</h4>
-                    <p class="product-code">Mã sản phẩm: IQ2406-900</p>
-                    <p class="product-price">2.100.000đ</p>
-                </div>
-            </div>
-            <div class="pagination">
-                <a href="#" class="page-item active">1</a>
-                <a href="#" class="page-item">2</a>
-                <a href="#" class="page-item next"><i class="fa-solid fa-angle-right"></i><i
-                        class="fa-solid fa-angle-right"></i></a>
-            </div>
+    <?php 
+        if (!empty($display_products)) {
+                foreach ($display_products as $product) {
+                    include __DIR__ . '/../includes/product-card.php';
+                }
+            } else {
+                echo '<p style="padding: 20px; text-align: center; width: 100%;">Chưa có sản phẩm nào trong cơ sở dữ liệu shopbangiay.</p>';
+            }
+?>
+</div>
         </main>
     </div>
     </div>
     <script>
-    document.addEventListener("DOMContentLoaded", function() {
-        // Lấy tất cả các nút bấm mở menu con
-        const toggles = document.querySelectorAll(".submenu-toggle");
-
-        toggles.forEach(function(toggle) {
-            toggle.addEventListener("click", function(e) {
-                e.preventDefault();
-
-                // Lấy thẻ li cha lớn hơn
-                const parentLi = this.parentElement;
-
-                // (Tùy chọn) Nếu bạn muốn bấm mục này thì tự động đóng các mục khác lại:
-                // document.querySelectorAll(".has-submenu").forEach(function(item) {
-                //     if (item !== parentLi) item.classList.remove("active");
-                // });
-
-                // Toggle class 'active' để xoay mũi tên và ẩn/hiện menu con
-                parentLi.classList.toggle("active");
-            });
-        });
+    document.querySelectorAll('.submenu-toggle').forEach(toggle => {
+    toggle.addEventListener('click', function(e) {
+        e.preventDefault();
+        // Tìm thẻ ul.sub-menu ngay bên cạnh để ẩn/hiện
+        const subMenu = this.closest('li.has-submenu').querySelector('.sub-menu');
+        if (subMenu) {
+            subMenu.style.display = subMenu.style.display === 'block' ? 'none' : 'block';
+        }
     });
+});
     </script>
 </body>
 

@@ -1,25 +1,24 @@
 <?php
-// Gọi file cấu hình chung (chứa cả session_start, BASE_URL và $conn)
-require_once __DIR__ . '/config/config.php'; // Hoặc đường dẫn trỏ đúng tới file config.php của bạn
+require_once __DIR__ . '/config/config.php';
 
 $settings = ['hotline' => '0984828392'];
 
-// Truy vấn lấy tối đa 18 sản phẩm từ bảng products
 $display_products = [];
-if (isset($conn) && $conn) {
+if (isset($db) && $db) {
+    // Truy vấn bằng PDO để lấy danh sách sản phẩm
     $sql = "SELECT product_id AS id, product_name AS name, product_code AS sku, brand AS tier_name, price, old_price, main_image AS image FROM products ORDER BY product_id DESC LIMIT 18";
-    $result = mysqli_query($conn, $sql);
-    if ($result) {
-        while ($row = mysqli_fetch_assoc($result)) {
-            // Lấy thêm các size của sản phẩm này
+    $stmt = $db->query($sql);
+    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+    if ($products) {
+        foreach ($products as $row) {
             $p_id = $row['id'];
-            $size_sql = "SELECT GROUP_CONCAT(size_value ORDER BY size_value ASC) AS sizes FROM product_sizes WHERE product_id = $p_id";
-            $size_result = mysqli_query($conn, $size_sql);
-            if ($size_row = mysqli_fetch_assoc($size_result)) {
-                $row['sizes'] = $size_row['sizes'];
-            } else {
-                $row['sizes'] = '';
-            }
+            // Lấy size của sản phẩm bằng PDO
+            $size_stmt = $db->prepare("SELECT GROUP_CONCAT(size_value ORDER BY size_value ASC) AS sizes FROM product_sizes WHERE product_id = ?");
+            $size_stmt->execute([$p_id]);
+            $size_row = $size_stmt->fetch(PDO::FETCH_ASSOC);
+            
+            $row['sizes'] = $size_row['sizes'] ?? '';
             $display_products[] = $row;
         }
     }

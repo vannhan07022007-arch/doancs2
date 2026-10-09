@@ -1,15 +1,7 @@
 <?php
 require_once dirname(__DIR__) . '/config/config.php';
- $brands = [];
-if (isset($conn) && $conn) {
-    $brand_sql = "SELECT DISTINCT brand FROM products WHERE brand IS NOT NULL AND brand != ''";
-    $brand_result = mysqli_query($conn, $brand_sql);
-    if ($brand_result) {
-        while ($b_row = mysqli_fetch_assoc($brand_result)) {
-            $brands[] = $b_row['brand'];
-        }
-    }
-}
+require_once __DIR__ . '/functions.php';
+
 
 ?>
 <nav class="main-navigation">
@@ -28,6 +20,7 @@ if (isset($conn) && $conn) {
                 </a>
                 <div class="dropdown-menu mega-dropdown">
                     <div class="mega-col">
+                        <?php $brands = get_all_brands($db); ?>
                         <h4>THƯƠNG HIỆU</h4>
                         <ul>
                             <?php if (!empty($brands)): ?>
@@ -59,18 +52,23 @@ if (isset($conn) && $conn) {
 
             <!-- 3. Phụ kiện -->
             <li class="nav-item has-dropdown">
+            <?php $accessories = get_all_accessories($db); ?>
                 <a href="<?php echo BASE_URL; ?>/pages/category.php?cat=phu-kien" class="nav-link">
-                    PHỤ KIỆN <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
+                PHỤ KIỆN <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
                 </a>
-                <ul class="dropdown-menu simple-dropdown">
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?cat=tat-dap-cau">Tất chống trượt / Tất
-                            dệt</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?cat=boc-ong-dong">Bọc ống đồng (Khay vế)</a>
-                    </li>
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?cat=gang-tay-mon">Găng tay thủ môn</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?cat=tui-dung-giay">Túi đựng giày</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?cat=qua-bong-da">Quả bóng đá</a></li>
-                </ul>
+                    <ul class="dropdown-menu simple-dropdown">
+                     <?php if (!empty($accessories)): ?>
+                        <?php foreach ($accessories as $item): ?>
+                        <li>
+                         <a href="<?php echo BASE_URL; ?>/pages/category.php?cat=<?php echo urlencode($item); ?>">
+                    <?php echo htmlspecialchars($item); ?>
+                </a>
+            </li>
+        <?php endforeach; ?>
+    <?php else: ?>
+        <li><a href="#">Chưa có phụ kiện nào</a></li>
+    <?php endif; ?>
+</ul>
             </li>
 
             <!-- 5. Tìm giày nhanh -->

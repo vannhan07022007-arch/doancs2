@@ -147,14 +147,15 @@
     display: none;
 }
 
-/* KHI MỞ (có class active trên thẻ li): Xoay mũi tên và hiển thị menu con tương ứng */
-.sidebar-menu li.has-submenu.active > a .arrow {
-    transform: rotate(90deg); /* Xoay mũi tên chỉ xuống */
+/* 1. Xoay mũi tên khi thẻ li có class active (không dùng dấu > để tránh bị kén thẻ div bọc) */
+.sidebar-menu li.has-submenu.active .arrow {
+    transform: rotate(90deg); 
 }
 
-.sidebar-menu li.has-submenu.active > .sub-menu,
-.sidebar-menu li.has-submenu.active > .dropdown-menu {
-    display: block !important; /* Buộc hiển thị danh sách bên trong */
+/* 2. Hiển thị menu con khi thẻ li có class active (bỏ dấu > đi) */
+.sidebar-menu li.has-submenu.active .sub-menu,
+.sidebar-menu li.has-submenu.active .dropdown-menu {
+    display: block !important; 
 }
 /* Khung chứa danh sách mức giá có thanh cuộn */
 .price-filter-list {

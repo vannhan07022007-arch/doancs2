@@ -6,16 +6,20 @@ if (session_status() === PHP_SESSION_NONE) {
 if (!defined('BASE_URL')) {
     define('BASE_URL', 'http://localhost/doancs2');
 }
-// Kết nối MySQL
+
+// Kết nối MySQL bằng PDO
 $host   = "localhost";
-$user   = "root";
+$user   = "root";      // Hoặc giữ nguyên tên biến của bạn
 $pass   = "";
-$dbname = "shopbangiay";   // phải trùng tên database bạn đã import
+$dbname = "shopbangiay"; 
 
-mysqli_report(MYSQLI_REPORT_OFF); // để lỗi kết nối rơi vào die() bên dưới
-$conn = mysqli_connect($host, $user, $pass, $dbname);
-
-if (!$conn) {
-    die("Kết nối MySQL thất bại: " . mysqli_connect_error());
+try {
+    // Sửa lại $user và $pass cho khớp với khai báo bên trên
+    $db = new PDO("mysql:host=$host;dbname=$dbname;charset=utf8mb4", $user, $pass);
+    // Thiết lập chế độ báo lỗi của PDO để dễ debug
+    $db->setAttribute(PDO::ATTR_ERRMODE, PDO::ERRMODE_EXCEPTION);
+} catch (PDOException $e) {
+    $error = 'Connection error: ' . $e->getMessage();
+    include('error.php');
+    exit();
 }
-mysqli_set_charset($conn, "utf8mb4");
