@@ -16,11 +16,11 @@ $sizes = !empty($product['sizes']) ? explode(',', $product['sizes']) : [38, 39, 
     <div class="discount-badge">-<?php echo $discount_percent; ?>%</div>
     <?php endif; ?>
 
-    <!-- Hình ảnh sản phẩm -->
-    <a href="<?php echo BASE_URL; ?>/pages/product-detail.php?id=<?php echo $product['id']; ?>"
+    <!-- Hình ảnh sản phẩm (Khớp với cột main_image và product_id) -->
+    <a href="<?php echo BASE_URL; ?>/pages/product-detail.php?id=<?php echo $product['product_id']; ?>"
         class="product-img-wrap">
-        <img src="<?php echo BASE_URL; ?>/<?php echo $product['image']; ?>"
-            alt="<?php echo htmlspecialchars($product['name']); ?>">
+        <img src="<?php echo BASE_URL; ?>/<?php echo $product['main_image']; ?>"
+            alt="<?php echo htmlspecialchars($product['product_name']); ?>">
     </a>
 
     <!-- Phân khúc sản phẩm -->
@@ -28,16 +28,16 @@ $sizes = !empty($product['sizes']) ? explode(',', $product['sizes']) : [38, 39, 
         <?php echo htmlspecialchars($product['tier_name'] ?? 'AUTHENTIC - PRO'); ?>
     </div>
 
-    <!-- Tên sản phẩm -->
+    <!-- Tên sản phẩm (Khớp với cột product_name) -->
     <h3 class="product-title">
-        <a href="<?php echo BASE_URL; ?>/pages/product-detail.php?id=<?php echo $product['id']; ?>">
-            <?php echo htmlspecialchars($product['name']); ?>
+        <a href="<?php echo BASE_URL; ?>/pages/product-detail.php?id=<?php echo $product['product_id']; ?>">
+            <?php echo htmlspecialchars($product['product_name']); ?>
         </a>
     </h3>
 
-    <!-- Mã sản phẩm -->
+    <!-- Mã sản phẩm (Khớp với cột product_code) -->
     <div class="product-sku">
-        Mã sản phẩm: <?php echo htmlspecialchars($product['sku'] ?? 'N/A'); ?>
+        Mã sản phẩm: <?php echo htmlspecialchars($product['product_code'] ?? 'N/A'); ?>
     </div>
 
     <!-- Khối giá -->

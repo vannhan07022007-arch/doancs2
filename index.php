@@ -6,13 +6,13 @@ $settings = ['hotline' => '0984828392'];
 $display_products = [];
 if (isset($db) && $db) {
     // Truy vấn bằng PDO để lấy danh sách sản phẩm
-    $sql = "SELECT product_id AS id, product_name AS name, product_code AS sku, brand AS tier_name, price, old_price, main_image AS image FROM products ORDER BY product_id DESC LIMIT 18";
+    $sql  = "SELECT product_id, product_name, product_code, brand, price, old_price, main_image FROM products ORDER BY product_id DESC LIMIT 18";
     $stmt = $db->query($sql);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($products) {
         foreach ($products as $row) {
-            $p_id = $row['id'];
+            $p_id = $row['product_id'];
             // Lấy size của sản phẩm bằng PDO
             $size_stmt = $db->prepare("SELECT GROUP_CONCAT(size_value ORDER BY size_value ASC) AS sizes FROM product_sizes WHERE product_id = ?");
             $size_stmt->execute([$p_id]);

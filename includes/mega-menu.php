@@ -27,7 +27,7 @@ require_once __DIR__ . '/functions.php';
                             <?php foreach ($brands as $brand): ?>
                             <li>
                                 <a
-                                    href="<?php echo BASE_URL; ?>/pages/category.php?brand=<?php echo urlencode($brand); ?>">
+                                    href="<?php echo BASE_URL; ?>/pages/category.php?id=1&brand=<?php echo urlencode($brand); ?>">
                                     Giày <?php echo htmlspecialchars($brand); ?>
                                 </a>
                             </li>
@@ -60,7 +60,7 @@ require_once __DIR__ . '/functions.php';
                      <?php if (!empty($accessories)): ?>
                         <?php foreach ($accessories as $item): ?>
                         <li>
-                         <a href="<?php echo BASE_URL; ?>/pages/category.php?cat=<?php echo urlencode($item); ?>">
+                         <a href="<?php echo BASE_URL; ?>/pages/category.php?id=2&brand=<?php echo urlencode($item); ?>">
                     <?php echo htmlspecialchars($item); ?>
                 </a>
             </li>

@@ -20,16 +20,18 @@ if (isset($conn) && $conn) {
         }
     }
 }
+
 $display_products = [];
 if (isset($db) && $db) {
-    // Truy vấn bằng PDO để lấy danh sách sản phẩm
-    $sql = "SELECT product_id AS id, product_name AS name, product_code AS sku, brand AS tier_name, price, old_price, main_image AS image FROM products ORDER BY product_id DESC LIMIT 18";
+    // Truy vấn giữ nguyên tên cột gốc để khớp với product-card.php
+    $sql = "SELECT product_id, product_name, product_code, brand, price, old_price, main_image FROM products ORDER BY product_id DESC LIMIT 18";
     $stmt = $db->query($sql);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
     if ($products) {
         foreach ($products as $row) {
-            $p_id = $row['id'];
+            $p_id = $row['product_id'];
+            
             // Lấy size của sản phẩm bằng PDO
             $size_stmt = $db->prepare("SELECT GROUP_CONCAT(size_value ORDER BY size_value ASC) AS sizes FROM product_sizes WHERE product_id = ?");
             $size_stmt->execute([$p_id]);
@@ -40,6 +42,144 @@ if (isset($db) && $db) {
         }
     }
 }
+
+// Kiểm tra nếu có tham số 'id' trên URL thì lấy value, ngược lại gán NULL (lấy tất cả)
+$category_id = isset($_GET['id']) && $_GET['id'] !== '' ? $_GET['id'] : null;
+$sql = "SELECT * FROM products WHERE 1=1";
+$params = [];
+
+// Nếu có ID (người dùng vừa bấm vào GIÀY BÓNG ĐÁ) -> Thêm điều kiện lọc
+if ($category_id !== null) {
+    $sql .= " AND category_id = :category_id";
+    $params[':category_id'] = $category_id;
+}
+
+$sql .= " ORDER BY created_at DESC";
+
+// Thực thi truy vấn
+$stmt = $db->prepare($sql);
+$stmt->execute($params);
+
+// Lưu kết quả vào biến
+$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+// 1. Lấy id danh mục và thương hiệu từ URL (nếu có)
+$category_id = isset($_GET['id']) && $_GET['id'] !== '' ? $_GET['id'] : null;
+$brand = isset($_GET['brand']) && $_GET['brand'] !== '' ? $_GET['brand'] : null;
+
+// 2. Xây dựng câu lệnh SQL linh hoạt
+$sql = "SELECT * FROM products WHERE 1=1";
+$params = [];
+
+// Nếu có chọn danh mục
+if ($category_id !== null) {
+    $sql .= " AND category_id = :category_id";
+    $params[':category_id'] = $category_id;
+}
+
+// Nếu có chọn thương hiệu
+if ($brand !== null) {
+    $sql .= " AND brand = :brand";
+    $params[':brand'] = $brand;
+}
+
+$sql .= " ORDER BY created_at DESC";
+
+// 3. Thực thi truy vấn
+$stmt = $db->prepare($sql);
+$stmt->execute($params);
+$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+
+$category_id = isset($_GET['id']) && $_GET['id'] !== '' ? $_GET['id'] : null;
+$brand = isset($_GET['brand']) && $_GET['brand'] !== '' ? $_GET['brand'] : null;
+$ground = isset($_GET['ground']) && $_GET['ground'] !== '' ? $_GET['ground'] : null;
+
+$sql = "SELECT * FROM products WHERE 1=1";
+$params = [];
+
+// Lọc theo danh mục
+if ($category_id !== null) {
+    $sql .= " AND category_id = :category_id";
+    $params[':category_id'] = $category_id;
+}
+
+// Lọc theo thương hiệu
+if ($brand !== null) {
+    $sql .= " AND brand = :brand";
+    $params[':brand'] = $brand;
+}
+
+// Lọc theo loại sân dựa vào chuỗi trong product_name (VD: tìm chữ 'tf', 'ic', 'fg')
+if ($ground !== null) {
+    $sql .= " AND product_name LIKE :ground";
+    $params[':ground'] = '%' . $ground . '%';
+}
+
+$sql .= " ORDER BY created_at DESC";
+
+$stmt = $db->prepare($sql);
+$stmt->execute($params);
+$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+//loc kich co
+$category_id = $_GET['id'] ?? 1;
+$size_filter = $_GET['size'] ?? null;
+$brand       = $_GET['brand'] ?? null;
+$ground      = $_GET['ground'] ?? null;
+
+// Khởi tạo câu SQL cơ bản từ bảng products
+$sql = "SELECT DISTINCT p.* FROM products p";
+$params = [];
+
+// CHỈ JOIN với product_sizes khi người dùng có chọn size
+if (!empty($size_filter)) {
+    $sql .= " JOIN product_sizes ps ON p.product_id = ps.product_id";
+}
+
+$sql .= " WHERE 1=1";
+
+// Lọc theo danh mục
+if (!empty($category_id)) {
+    $sql .= " AND p.category_id = :category_id";
+    $params[':category_id'] = $category_id;
+}
+
+// Lọc theo thương hiệu
+if (!empty($brand)) {
+    $sql .= " AND p.brand = :brand";
+    $params[':brand'] = $brand;
+}
+
+// Lọc theo loại sân
+if (!empty($ground)) {
+    $sql .= " AND p.product_name LIKE :ground";
+    $params[':ground'] = "%$ground%";
+}
+
+// Lọc theo size (chỉ thêm điều kiện này khi có chọn size)
+if (!empty($size_filter)) {
+    $sql .= " AND ps.size_value = :size";
+    $params[':size'] = $size_filter;
+}
+
+$sql .= " ORDER BY p.product_id DESC";
+
+$stmt = $db->prepare($sql);
+$stmt->execute($params);
+$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+
+//thiết lập phân trang
+$limit = 10; // Mỗi trang hiện 10 sản phẩm
+$total_products = count($products); // Tổng số sản phẩm
+$total_pages = ceil($total_products / $limit); // Tổng số trang
+
+// Lấy số trang hiện tại từ URL (mặc định là trang 1)
+$page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
+if ($page < 1) $page = 1;
+
+// 3. Cắt mảng để chỉ lấy sản phẩm của trang hiện tại hiển thị
+$display_products = array_slice($products, ($page - 1) * $limit, $limit);
 
 ?>
 <!DOCTYPE html>
@@ -188,18 +328,23 @@ if (isset($db) && $db) {
             <div class="sidebar-box">
                 <h3 class="sidebar-title">THEO KÍCH CỠ</h3>
                 <div class="size-grid">
-                    <button class="size-btn">34</button>
-                    <button class="size-btn">35</button>
-                    <button class="size-btn">36</button>
-                    <button class="size-btn">37</button>
-                    <button class="size-btn">38</button>
-                    <button class="size-btn">39</button>
-                    <button class="size-btn">40</button>
-                    <button class="size-btn">41</button>
-                    <button class="size-btn">42</button>
-                    <button class="size-btn">43</button>
-                    <button class="size-btn">44</button>
-                    <button class="size-btn">45</button>
+                   <?php 
+$sizes_list = [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
+$current_id = $_GET['id'] ?? 1;
+$current_brand = isset($_GET['brand']) ? $_GET['brand'] : '';
+$current_ground = isset($_GET['ground']) ? $_GET['ground'] : '';
+
+foreach ($sizes_list as $s): 
+    // Giữ lại các bộ lọc cũ (id, brand, ground) nếu người dùng đã chọn trước đó
+    $url = "category.php?id=" . $current_id;
+    if (!empty($current_brand)) $url .= "&brand=" . urlencode($current_brand);
+    if (!empty($current_ground)) $url .= "&ground=" . urlencode($current_ground);
+    $url .= "&size=" . $s;
+?>
+    <a href="<?php echo $url; ?>" class="size-btn <?php echo (isset($_GET['size']) && $_GET['size'] == $s) ? 'active' : ''; ?>">
+        <?php echo $s; ?>
+    </a>
+<?php endforeach; ?>
 
                 </div>
             </div>
@@ -245,7 +390,36 @@ if (isset($db) && $db) {
 ?>
 </div>
         </main>
+        
     </div>
+    <?php if ($total_pages > 1): ?>
+    <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 6px; margin: 30px 0;">
+        <?php 
+        // Lấy tất cả tham số GET hiện tại (như id, brand, size, ground...) để khi bấm chuyển trang không bị mất bộ lọc
+        $queryParams = $_GET;
+        
+        // Vòng lặp hiển thị các số trang từ 1 đến tổng số trang
+        for ($i = 1; $i <= $total_pages; $i++): 
+            $queryParams['page'] = $i;
+            $pageUrl = "category.php?" . http_build_query($queryParams);
+            // Kiểm tra nếu là trang hiện tại thì thêm class 'active'
+            $isActive = ($page == $i) ? 'active' : '';
+        ?>
+            <a href="<?php echo $pageUrl; ?>" class="page-item <?php echo $isActive; ?>"><?php echo $i; ?></a>
+        <?php endfor; ?>
+
+        <!-- Nút chuyển trang tiếp theo (Next) -->
+        <?php if ($page < $total_pages): ?>
+            <?php 
+                $queryParams['page'] = $page + 1;
+                $nextUrl = "category.php?" . http_build_query($queryParams);
+            ?>
+            <a href="<?php echo $nextUrl; ?>" class="page-item next">
+                <i class="fa-solid fa-angle-right"></i><i class="fa-solid fa-angle-right"></i>
+            </a>
+        <?php endif; ?>
+    </div>
+<?php endif; ?>
     </div>
     <script>
     document.querySelectorAll('.submenu-toggle').forEach(toggle => {
