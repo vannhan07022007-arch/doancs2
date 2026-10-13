@@ -9,176 +9,103 @@ $settings = ['hotline' => '0984828392'];
 
 
 // Truy vấn lấy danh sách các loại phụ kiện động từ database
-$accessories = [];
-if (isset($conn) && $conn) {
-    // Giả sử cột phân loại phụ kiện của bạn lưu trong cột 'brand' hoặc 'category' khi sản phẩm thuộc nhóm phụ kiện
-    $acc_sql = "SELECT DISTINCT brand FROM products WHERE type = 'phu_kien' AND brand IS NOT NULL AND brand != ''";
-    $acc_result = mysqli_query($conn, $acc_sql);
-    if ($acc_result) {
-        while ($acc_row = mysqli_fetch_assoc($acc_result)) {
-            $accessories[] = $acc_row['brand'];
-        }
-    }
-}
 
-$display_products = [];
-if (isset($db) && $db) {
-    // Truy vấn giữ nguyên tên cột gốc để khớp với product-card.php
-    $sql = "SELECT product_id, product_name, product_code, brand, price, old_price, main_image FROM products ORDER BY product_id DESC LIMIT 18";
-    $stmt = $db->query($sql);
-    $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+// ==========================================
+// 1. NHẬN TẤT CẢ CÁC THAM SỐ TỪ URL (CHỈ NHẬN 1 LẦN DUY NHẤT)
+// ==========================================
+$category_id  = isset($_GET['id']) ? $_GET['id'] : null;
+$size_filter  = isset($_GET['size']) ? $_GET['size'] : null;
+$brand        = isset($_GET['brand']) ? $_GET['brand'] : null;
+$ground       = isset($_GET['ground']) ? $_GET['ground'] : null;
+$price_filter = isset($_GET['price']) ? $_GET['price'] : null;
+$keyword      = isset($_GET['keyword']) ? trim($_GET['keyword']) : null;
 
-    if ($products) {
-        foreach ($products as $row) {
-            $p_id = $row['product_id'];
-            
-            // Lấy size của sản phẩm bằng PDO
-            $size_stmt = $db->prepare("SELECT GROUP_CONCAT(size_value ORDER BY size_value ASC) AS sizes FROM product_sizes WHERE product_id = ?");
-            $size_stmt->execute([$p_id]);
-            $size_row = $size_stmt->fetch(PDO::FETCH_ASSOC);
-            
-            $row['sizes'] = $size_row['sizes'] ?? '';
-            $display_products[] = $row;
-        }
-    }
-}
-
-// Kiểm tra nếu có tham số 'id' trên URL thì lấy value, ngược lại gán NULL (lấy tất cả)
-$category_id = isset($_GET['id']) && $_GET['id'] !== '' ? $_GET['id'] : null;
-$sql = "SELECT * FROM products WHERE 1=1";
+// ==========================================
+// 2. XÂY DỰNG CÂU LỆNH SQL KẾT HỢP TẤT CẢ CÁC BỘ LỌC VÀ TÌM KIẾM
+// ==========================================
+$base_sql = " FROM products p";
 $params = [];
 
-// Nếu có ID (người dùng vừa bấm vào GIÀY BÓNG ĐÁ) -> Thêm điều kiện lọc
-if ($category_id !== null) {
-    $sql .= " AND category_id = :category_id";
-    $params[':category_id'] = $category_id;
-}
-
-$sql .= " ORDER BY created_at DESC";
-
-// Thực thi truy vấn
-$stmt = $db->prepare($sql);
-$stmt->execute($params);
-
-// Lưu kết quả vào biến
-$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-// 1. Lấy id danh mục và thương hiệu từ URL (nếu có)
-$category_id = isset($_GET['id']) && $_GET['id'] !== '' ? $_GET['id'] : null;
-$brand = isset($_GET['brand']) && $_GET['brand'] !== '' ? $_GET['brand'] : null;
-
-// 2. Xây dựng câu lệnh SQL linh hoạt
-$sql = "SELECT * FROM products WHERE 1=1";
-$params = [];
-
-// Nếu có chọn danh mục
-if ($category_id !== null) {
-    $sql .= " AND category_id = :category_id";
-    $params[':category_id'] = $category_id;
-}
-
-// Nếu có chọn thương hiệu
-if ($brand !== null) {
-    $sql .= " AND brand = :brand";
-    $params[':brand'] = $brand;
-}
-
-$sql .= " ORDER BY created_at DESC";
-
-// 3. Thực thi truy vấn
-$stmt = $db->prepare($sql);
-$stmt->execute($params);
-$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-
-$category_id = isset($_GET['id']) && $_GET['id'] !== '' ? $_GET['id'] : null;
-$brand = isset($_GET['brand']) && $_GET['brand'] !== '' ? $_GET['brand'] : null;
-$ground = isset($_GET['ground']) && $_GET['ground'] !== '' ? $_GET['ground'] : null;
-
-$sql = "SELECT * FROM products WHERE 1=1";
-$params = [];
-
-// Lọc theo danh mục
-if ($category_id !== null) {
-    $sql .= " AND category_id = :category_id";
-    $params[':category_id'] = $category_id;
-}
-
-// Lọc theo thương hiệu
-if ($brand !== null) {
-    $sql .= " AND brand = :brand";
-    $params[':brand'] = $brand;
-}
-
-// Lọc theo loại sân dựa vào chuỗi trong product_name (VD: tìm chữ 'tf', 'ic', 'fg')
-if ($ground !== null) {
-    $sql .= " AND product_name LIKE :ground";
-    $params[':ground'] = '%' . $ground . '%';
-}
-
-$sql .= " ORDER BY created_at DESC";
-
-$stmt = $db->prepare($sql);
-$stmt->execute($params);
-$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
-
-//loc kich co
-$category_id = $_GET['id'] ?? 1;
-$size_filter = $_GET['size'] ?? null;
-$brand       = $_GET['brand'] ?? null;
-$ground      = $_GET['ground'] ?? null;
-
-// Khởi tạo câu SQL cơ bản từ bảng products
-$sql = "SELECT DISTINCT p.* FROM products p";
-$params = [];
-
-// CHỈ JOIN với product_sizes khi người dùng có chọn size
+// Nếu có lọc size thì mới JOIN bảng product_sizes
 if (!empty($size_filter)) {
-    $sql .= " JOIN product_sizes ps ON p.product_id = ps.product_id";
+    $base_sql .= " JOIN product_sizes ps ON p.product_id = ps.product_id";
 }
 
-$sql .= " WHERE 1=1";
+$base_sql .= " WHERE 1=1";
 
 // Lọc theo danh mục
 if (!empty($category_id)) {
-    $sql .= " AND p.category_id = :category_id";
+    $base_sql .= " AND p.category_id = :category_id";
     $params[':category_id'] = $category_id;
 }
 
 // Lọc theo thương hiệu
 if (!empty($brand)) {
-    $sql .= " AND p.brand = :brand";
+    $base_sql .= " AND p.brand = :brand";
     $params[':brand'] = $brand;
 }
 
-// Lọc theo loại sân
+// Lọc theo loại sân (dựa vào tên sản phẩm)
 if (!empty($ground)) {
-    $sql .= " AND p.product_name LIKE :ground";
+    $base_sql .= " AND p.product_name LIKE :ground";
     $params[':ground'] = "%$ground%";
 }
 
-// Lọc theo size (chỉ thêm điều kiện này khi có chọn size)
+// Lọc theo size cụ thể
 if (!empty($size_filter)) {
-    $sql .= " AND ps.size_value = :size";
+    $base_sql .= " AND ps.size_value = :size";
     $params[':size'] = $size_filter;
 }
 
-$sql .= " ORDER BY p.product_id DESC";
+// Lọc theo khoảng giá
+if (!empty($price_filter)) {
+    switch ($price_filter) {
+        case 'under_300k':
+            $base_sql .= " AND p.price < 300000";
+            break;
+        case '300k_400k':
+            $base_sql .= " AND p.price BETWEEN 300000 AND 400000";
+            break;
+        case '400k_500k':
+            $base_sql .= " AND p.price BETWEEN 400000 AND 500000";
+            break;
+        case '500k_600k':
+            $base_sql .= " AND p.price BETWEEN 500000 AND 600000";
+            break;
+        case 'over_600k':
+            $base_sql .= " AND p.price > 600000";
+            break;
+    }
+}
 
+// Lọc theo từ khóa tìm kiếm (Tên hoặc mã sản phẩm)
+if (!empty($keyword)) {
+    $base_sql .= " AND (p.product_name LIKE :keyword OR p.product_code LIKE :keyword)";
+    $params[':keyword'] = "%$keyword%";
+}
+
+// ==========================================
+// 3. THỰC THI TRUY VẤN VÀ PHÂN TRANG
+// ==========================================
+$sql = "SELECT DISTINCT p.*" . $base_sql . " ORDER BY p.product_id DESC";
 $stmt = $db->prepare($sql);
 $stmt->execute($params);
-$display_products = $stmt->fetchAll(PDO::FETCH_ASSOC);
+$products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 
-//thiết lập phân trang
-$limit = 10; // Mỗi trang hiện 10 sản phẩm
-$total_products = count($products); // Tổng số sản phẩm
-$total_pages = ceil($total_products / $limit); // Tổng số trang
+if (!is_array($products)) {
+    $products = [];
+}
 
-// Lấy số trang hiện tại từ URL (mặc định là trang 1)
+// Thiết lập phân trang
+$limit = 10; // Số sản phẩm trên 1 trang
+$total_products = count($products);
+$total_pages = $total_products > 0 ? ceil($total_products / $limit) : 1;
+
 $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
+if ($page > $total_pages) $page = $total_pages;
 
-// 3. Cắt mảng để chỉ lấy sản phẩm của trang hiện tại hiển thị
+// Cắt mảng hiển thị cho trang hiện tại (đã sửa chuẩn công thức phân trang)
 $display_products = array_slice($products, ($page - 1) * $limit, $limit);
 
 ?>
@@ -350,30 +277,42 @@ foreach ($sizes_list as $s):
             </div>
             <!-- Khung bộ lọc Mức Giá -->
             <div class="sidebar-box">
-                <h3 class="sidebar-title">MỨC GIÁ</h3>
-                <div class="price-filter-list">
-                    <label class="price-item">
-                        <input type="checkbox" name="price[]" value="under_300k">
-                        <span>Giá dưới 300.000đ</span>
-                    </label>
-                    <label class="price-item">
-                        <input type="checkbox" name="price[]" value="300k_400k">
-                        <span>300.000đ - 400.000đ</span>
-                    </label>
-                    <label class="price-item">
-                        <input type="checkbox" name="price[]" value="400k_500k">
-                        <span>400.000đ - 500.000đ</span>
-                    </label>
-                    <label class="price-item">
-                        <input type="checkbox" name="price[]" value="500k_600k">
-                        <span>500.000đ - 600.000đ</span>
-                    </label>
-                    <label class="price-item">
-                        <input type="checkbox" name="price[]" value="over_600k">
-                        <span>Giá trên 600.000đ</span>
-                    </label>
-                </div>
-            </div>
+    <h3 class="sidebar-title">MỨC GIÁ</h3>
+    <div class="price-filter-list" style="display: flex; flex-direction: column; gap: 8px;">
+        <?php 
+            // Hàm phụ trợ để giữ lại các bộ lọc khác (như danh mục, size, brand...) khi chuyển giá
+            function getPriceUrl($priceValue) {
+                $params = $_GET;
+                // Nếu bấm lại đúng mức giá đang chọn thì coi như bỏ lọc giá
+                if (isset($params['price']) && $params['price'] == $priceValue) {
+                    unset($params['price']);
+                } else {
+                    $params['price'] = $priceValue;
+                }
+                unset($params['page']); // Reset về trang 1 khi đổi bộ lọc
+                return "category.php?" . http_build_query($params);
+            }
+            
+            $current_price = $_GET['price'] ?? '';
+        ?>
+
+        <a href="<?php echo getPriceUrl('under_300k'); ?>" class="price-item <?php echo ($current_price == 'under_300k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == 'under_300k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
+            Giá dưới 300.000đ
+        </a>
+        <a href="<?php echo getPriceUrl('300k_400k'); ?>" class="price-item <?php echo ($current_price == '300k_400k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == '300k_400k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
+            300.000đ - 400.000đ
+        </a>
+        <a href="<?php echo getPriceUrl('400k_500k'); ?>" class="price-item <?php echo ($current_price == '400k_500k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == '400k_500k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
+            400.000đ - 500.000đ
+        </a>
+        <a href="<?php echo getPriceUrl('500k_600k'); ?>" class="price-item <?php echo ($current_price == '500k_600k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == '500k_600k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
+            500.000đ - 600.000đ
+        </a>
+        <a href="<?php echo getPriceUrl('over_600k'); ?>" class="price-item <?php echo ($current_price == 'over_600k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == 'over_600k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
+            Giá trên 600.000đ
+        </a>
+    </div>
+</div>
         </aside>
 
         <!-- CỘT PHẢI: Nội dung sản phẩm -->
