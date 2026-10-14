@@ -60,10 +60,56 @@ $hotline = $settings['hotline'] ?? '0984828392';
             </div>
 
             <!-- Icon Giỏ hàng -->
-            <button type="button" class="icon-btn cart-btn" id="open-cart-drawer" title="Giỏ hàng">
-                <i class="fa-solid fa-basket-shopping"></i>
-                <span class="cart-badge" id="cart-badge-count"><?php echo $cart_count; ?></span>
-            </button>
+           <div class="cart-dropdown-wrapper" style="position: relative;">
+    <!-- Nút icon giỏ hàng -->
+    <button type="button" class="icon-btn cart-btn" id="open-cart-drawer" title="Giỏ hàng">
+        <i class="fa-solid fa-basket-shopping"></i>
+        <span class="cart-badge" id="cart-badge-count"><?php echo $cart_count; ?></span>
+    </button>
+
+    <!-- Khung dropdown danh sách sản phẩm (Sẽ tự ẩn đi và chỉ hiện khi hover) -->
+    <div class="cart-dropdown-box" id="cartDropdownMenu">
+        <div class="cart-items-list">
+            <?php 
+            $total_price = 0;
+            if (!empty($_SESSION['cart']) && is_array($_SESSION['cart'])): 
+                foreach ($_SESSION['cart'] as $key => $item):
+                    $item_total = $item['price'] * $item['quantity'];
+                    $total_price += $item_total;
+            ?>
+                <div class="cart-item-dropdown">
+                    <img src="<?php echo BASE_URL . '/' . htmlspecialchars($item['main_image']); ?>" alt="" class="item-img">
+                    <div class="item-info">
+                        <h4 class="item-name">
+                            <?php echo htmlspecialchars($item['product_name']); ?> 
+                            <span style="font-size: 12px; color: #e91e63;">(Size: <?php echo htmlspecialchars($item['size']); ?>)</span>
+                        </h4>
+                        <div class="item-price-qty">
+                            <span class="item-price"><?php echo number_format($item['price'], 0, ',', '.'); ?>đ</span>
+                            <span class="item-qty-box">SL: <?php echo $item['quantity']; ?></span>
+                        </div>
+                    </div>
+                    <a href="cart.php?action=delete&key=<?php echo $key; ?>" class="item-remove-btn">
+                        <i class="fa-solid fa-trash-can"></i>
+                    </a>
+                </div>
+            <?php 
+                endforeach;
+            else: 
+            ?>
+                <p style="text-align: center; padding: 20px; color: #666; font-size: 14px;">Giỏ hàng của bạn đang trống</p>
+            <?php endif; ?>
+        </div>
+
+        <div class="cart-dropdown-footer">
+            <div class="cart-total-section">
+                <span class="total-label">Tổng tiền:</span>
+                <span class="total-price"><?php echo number_format($total_price, 0, ',', '.'); ?>đ</span>
+            </div>
+            <a href="cart.php" class="btn-checkout">Xem giỏ hàng & Thanh toán</a>
+        </div>
+    </div>
+</div>
 
         </div>
 
@@ -72,3 +118,24 @@ $hotline = $settings['hotline'] ?? '0984828392';
     <!-- Nhúng Mega Menu phía dưới Header -->
     <?php include_once __DIR__ . '/mega-menu.php'; ?>
 </header>
+
+<script>
+document.addEventListener('DOMContentLoaded', function () {
+    const cartBtn = document.getElementById('open-cart-drawer');
+    const cartDropdown = document.getElementById('cartDropdownMenu');
+
+    // Bấm vào nút giỏ hàng -> bật/tắt dropdown
+    cartBtn.addEventListener('click', function (e) {
+        e.stopPropagation();   // ngăn sự kiện "lan" ra document, tránh đóng ngay lập tức
+        cartDropdown.classList.toggle('active');
+    });
+
+    // Bấm ra ngoài vùng dropdown -> tự động đóng lại
+    document.addEventListener('click', function (e) {
+        const isClickInside = cartDropdown.contains(e.target) || cartBtn.contains(e.target);
+        if (!isClickInside) {
+            cartDropdown.classList.remove('active');
+        }
+    });
+});
+</script>
