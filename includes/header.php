@@ -1,11 +1,4 @@
 <?php
-// Lấy số lượng sản phẩm trong giỏ hàng (nếu chưa có thì bằng 0)
-$cart_count = 0;
-if (isset($_SESSION['cart']) && is_array($_SESSION['cart'])) {
-    foreach ($_SESSION['cart'] as $item) {
-        $cart_count += $item['quantity'];
-    }
-}
 
 // Lấy thông tin hotline từ DB hoặc cài đặt mặc định
 $hotline = $settings['hotline'] ?? '0984828392';
@@ -52,19 +45,24 @@ $hotline = $settings['hotline'] ?? '0984828392';
                 </div>
             </a>
 
-            <!-- Icon Tài khoản -->
             <div class="account-dropdown-wrapper">
-                <a href="<?php echo isset($_SESSION['user_id']) ? BASE_URL . '/pages/account.php' : BASE_URL . '/pages/login.php'; ?>" class="icon-btn" title="Tài khoản">
-                    <i class="fa-regular fa-user"></i>
-                </a>
-            </div>
+    <a href="<?php echo isset($_SESSION['user_id']) ? BASE_URL . '/pages/account.php' : BASE_URL . '/pages/login.php'; ?>" class="icon-btn" id="open-account-dropdown" title="Tài khoản">
+        <i class="fa-regular fa-user"></i>
+    </a>
+
+    <?php if (!isset($_SESSION['user_id'])): ?>
+    <div class="account-menu" id="accountDropdownMenu">
+        <a href="<?php echo BASE_URL; ?>/pages/login.php" class="account-menu-btn">Đăng nhập</a>
+        <a href="<?php echo BASE_URL; ?>/pages/register.php" class="account-menu-btn">Đăng ký</a>
+    </div>
+    <?php endif; ?>
+</div>
 
             <!-- Icon Giỏ hàng -->
            <div class="cart-dropdown-wrapper" style="position: relative;">
     <!-- Nút icon giỏ hàng -->
     <button type="button" class="icon-btn cart-btn" id="open-cart-drawer" title="Giỏ hàng">
         <i class="fa-solid fa-basket-shopping"></i>
-        <span class="cart-badge" id="cart-badge-count"><?php echo $cart_count; ?></span>
     </button>
 
     <!-- Khung dropdown danh sách sản phẩm (Sẽ tự ẩn đi và chỉ hiện khi hover) -->
@@ -121,21 +119,40 @@ $hotline = $settings['hotline'] ?? '0984828392';
 
 <script>
 document.addEventListener('DOMContentLoaded', function () {
+    // --- 1. XỬ LÝ DROPDOWN GIỎ HÀNG ---
     const cartBtn = document.getElementById('open-cart-drawer');
     const cartDropdown = document.getElementById('cartDropdownMenu');
 
-    // Bấm vào nút giỏ hàng -> bật/tắt dropdown
-    cartBtn.addEventListener('click', function (e) {
-        e.stopPropagation();   // ngăn sự kiện "lan" ra document, tránh đóng ngay lập tức
-        cartDropdown.classList.toggle('active');
-    });
+    if (cartBtn && cartDropdown) {
+        // Bấm vào nút giỏ hàng -> bật/tắt dropdown
+        cartBtn.addEventListener('click', function (e) {
+            e.stopPropagation(); // Ngăn sự kiện lan ra document, tránh đóng ngay lập tức
+            cartDropdown.classList.toggle('active');
+        });
 
-    // Bấm ra ngoài vùng dropdown -> tự động đóng lại
-    document.addEventListener('click', function (e) {
-        const isClickInside = cartDropdown.contains(e.target) || cartBtn.contains(e.target);
-        if (!isClickInside) {
-            cartDropdown.classList.remove('active');
-        }
-    });
+        // Bấm ra ngoài vùng giỏ hàng -> tự động đóng lại
+        document.addEventListener('click', function (e) {
+            const isClickInside = cartDropdown.contains(e.target) || cartBtn.contains(e.target);
+            if (!isClickInside) {
+                cartDropdown.classList.remove('active');
+            }
+        });
+    }
+
+
+    // --- 2. XỬ LÝ DROPDOWN TÀI KHOẢN (ĐĂNG NHẬP / ĐĂNG KÝ) ---
+    const accountWrapper = document.querySelector('.account-dropdown-wrapper');
+    const accountDropdown = document.getElementById('accountDropdownMenu');
+
+    // Chỉ chạy hiệu ứng hover khi chưa đăng nhập (tức là có tồn tại menu dropdown)
+    if (accountWrapper && accountDropdown) {
+        accountWrapper.addEventListener('mouseenter', function () {
+            accountDropdown.classList.add('active');
+        });
+
+        accountWrapper.addEventListener('mouseleave', function () {
+            accountDropdown.classList.remove('active');
+        });
+    }
 });
 </script>

@@ -1,0 +1,98 @@
+/* Khung chứa tổng thể trang đăng ký */
+.register-container {
+  max-width: 1170px;
+  margin: 30px auto;
+  padding: 0 15px;
+}
+
+.register-container .page-title {
+  font-size: 24px;
+  font-weight: 600;
+  color: #222;
+  margin-bottom: 10px;
+  text-transform: uppercase;
+}
+
+.register-container .page-subtitle {
+  font-size: 14px;
+  color: #666;
+  margin-bottom: 30px;
+}
+
+/* Chia bố cục 2 cột cho form */
+.register-form .form-row {
+  display: flex;
+  gap: 30px;
+  margin-bottom: 20px;
+}
+
+.register-form .form-group {
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+}
+
+.register-form label {
+  font-size: 14px;
+  color: #333;
+  margin-bottom: 8px;
+  font-weight: 500;
+}
+
+/* Định dạng các ô input */
+.register-form .form-control {
+  width: 100%;
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+  transition: border-color 0.2s ease;
+  background-color: #fff;
+}
+
+.register-form .form-control:focus {
+  border-color: #e86282; /* Màu hồng chủ đạo của web */
+}
+
+/* Phần nút bấm và link đăng nhập */
+.form-actions {
+  display: flex;
+  align-items: center;
+  gap: 20px;
+  margin-top: 30px;
+}
+
+.btn-register {
+  background-color: #f01d4e;
+  color: #ffffff;
+  border: none;
+  padding: 10px 35px;
+  border-radius: 20px;
+  font-size: 15px;
+  font-weight: 500;
+  cursor: pointer;
+  transition: background-color 0.2s ease;
+}
+
+.btn-register:hover {
+  background-color: #d84b6e;
+}
+
+.login-link {
+  color: #333;
+  text-decoration: underline;
+  font-size: 14px;
+}
+
+.login-link:hover {
+  color: #ed2151;
+}
+
+/* Responsive cho màn hình nhỏ (Mobile) */
+@media (max-width: 768px) {
+  .register-form .form-row {
+    flex-direction: column;
+    gap: 20px;
+  }
+}
