@@ -1,4 +1,7 @@
 <?php
+ if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 
 // Lấy thông tin hotline từ DB hoặc cài đặt mặc định
 $hotline = $settings['hotline'] ?? '0984828392';
@@ -45,19 +48,24 @@ $hotline = $settings['hotline'] ?? '0984828392';
                 </div>
             </a>
 
-            <div class="account-dropdown-wrapper">
+            <div class="account-dropdown-wrapper" style="position: relative;">
     <a href="<?php echo isset($_SESSION['user_id']) ? BASE_URL . '/pages/account.php' : BASE_URL . '/pages/login.php'; ?>" class="icon-btn" id="open-account-dropdown" title="Tài khoản">
         <i class="fa-regular fa-user"></i>
     </a>
 
-    <?php if (!isset($_SESSION['user_id'])): ?>
+    <!-- Menu Dropdown thay đổi linh hoạt theo trạng thái đăng nhập -->
     <div class="account-menu" id="accountDropdownMenu">
-        <a href="<?php echo BASE_URL; ?>/pages/login.php" class="account-menu-btn">Đăng nhập</a>
-        <a href="<?php echo BASE_URL; ?>/pages/register.php" class="account-menu-btn">Đăng ký</a>
+        <?php if (isset($_SESSION['user_id'])): ?>
+            <!-- ĐÃ ĐĂNG NHẬP: Hiển thị Tài khoản và Đăng xuất -->
+           <a href="<?php echo BASE_URL; ?>/pages/account.php" class="account-menu-btn" style="color: #fff; background: #f43f5e; display: block; padding: 10px; text-align: center; border-radius: 20px; margin-bottom: 8px; text-decoration: none; font-weight: bold;">Tài khoản</a>
+        <a href="<?php echo BASE_URL; ?>/pages/logout.php" class="account-menu-btn" style="color: #fff; background: #f43f5e; display: block; padding: 10px; text-align: center; border-radius: 20px; text-decoration: none; font-weight: bold;">Đăng xuất</a>
+        <?php else: ?>
+            <!-- CHƯA ĐĂNG NHẬP: Hiển thị Đăng nhập và Đăng ký -->
+            <a href="<?php echo BASE_URL; ?>/pages/login.php" class="account-menu-btn">Đăng nhập</a>
+            <a href="<?php echo BASE_URL; ?>/pages/register.php" class="account-menu-btn">Đăng ký</a>
+        <?php endif; ?>
     </div>
-    <?php endif; ?>
 </div>
-
             <!-- Icon Giỏ hàng -->
            <div class="cart-dropdown-wrapper" style="position: relative;">
     <!-- Nút icon giỏ hàng -->

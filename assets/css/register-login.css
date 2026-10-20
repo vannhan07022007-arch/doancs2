@@ -117,3 +117,17 @@
 }
 .alert-error   { background: #fdecea; color: #b71c1c; border: 1px solid #f5c6cb; }
 .alert-success { background: #e8f5e9; color: #1b5e20; border: 1px solid #c8e6c9; }
+/* Form đăng nhập: thu nhỏ và căn giữa */
+.register-form.login-form {
+  max-width: 450px;      /* chiều rộng form, chỉnh tùy ý */
+  margin: 0 auto;        /* căn giữa theo chiều ngang */
+}
+
+.register-form.login-form .form-group {
+  margin-bottom: 20px;
+}
+
+/* Căn giữa nút và link */
+.register-form.login-form .form-actions {
+  justify-content: center;
+}

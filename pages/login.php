@@ -1,7 +1,39 @@
 <?php
- require_once dirname(__DIR__) . '/config/config.php';
- $settings = ['hotline' => '0984828392'];
+require_once dirname(__DIR__) . '/config/config.php';
+$settings = ['hotline' => '0984828392'];
+
+// Đã đăng nhập rồi thì chuyển thẳng sang trang khách hàng
+if (isset($_SESSION['user_id'])) {
+    header('Location: ' . BASE_URL . '/pages/account.php');
+    exit;
+}
+
+$error = '';
+
+if ($_SERVER['REQUEST_METHOD'] === 'POST') {
+    $email    = trim($_POST['email'] ?? '');
+    $password = $_POST['password'] ?? '';
+
+    $stmt = $db->prepare("SELECT * FROM users WHERE email = ? LIMIT 1");
+    $stmt->execute([$email]);
+    $dbUser = $stmt->fetch(PDO::FETCH_ASSOC);
+
+    if ($dbUser && password_verify($password, $dbUser['password'])) {
+        session_regenerate_id(true);
+        $_SESSION['user_id']    = $dbUser['user_id'];
+        $_SESSION['user_name']  = $dbUser['fullname'];   // sửa: fullname
+        $_SESSION['user_email'] = $dbUser['email'];
+
+        header('Location: ' . BASE_URL . '/pages/account.php');
+        exit;
+    } else {
+        $error = 'Email hoặc mật khẩu không đúng!';
+    }
+}
 ?>
+<?php if (!empty($error)): ?>
+    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
 <!DOCTYPE html>
 <html lang="vi">
 
@@ -55,3 +87,22 @@
     </div>
     <div class="container register-container">
     <h1 class="page-title">ĐĂNG NHẬP</h1>
+
+<form action="" method="POST" class="register-form login-form">
+
+        <div class="form-group">
+            <label for="email">Email *</label>
+            <input type="email" id="email" name="email" required class="form-control">
+        </div>
+
+        <div class="form-group">
+            <label for="password">Mật khẩu *</label>
+            <input type="password" id="password" name="password" required class="form-control">
+        </div>
+
+        <div class="form-actions">
+            <button type="submit" class="btn-register">Đăng nhập</button>
+            <a href="register.php" class="login-link">Đăng ký</a>
+        </div>
+    </form>
+</div>

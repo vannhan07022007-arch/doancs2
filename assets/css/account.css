@@ -1,0 +1,140 @@
+.account-title {
+  text-align: center;
+  font-size: 30px;
+  font-weight: 700;
+  color: #f0507a;
+  margin: 30px 0 50px;
+}
+
+.account-wrapper {
+  display: flex;
+  gap: 50px;
+  margin-bottom: 60px;
+  align-items: flex-start;
+}
+
+/* Cột trái */
+.account-sidebar {
+  flex: 0 0 380px;
+}
+
+.account-sidebar h2 {
+  font-size: 26px;
+  font-weight: 400;
+  color: #222;
+  margin-bottom: 10px;
+}
+
+.account-sidebar .greeting {
+  font-weight: 700;
+  font-size: 16px;
+  margin-bottom: 30px;
+}
+
+.account-sidebar .greeting span {
+  color: #f0507a;
+}
+
+.account-sidebar .account-nav {
+  list-style: none;
+  display: block;
+  position: static;
+  opacity: 1;
+  visibility: visible;
+}
+
+.account-sidebar .account-nav li {
+  display: block;
+  margin-bottom: 25px;
+}
+
+.account-sidebar .account-nav a {
+  display: inline-block;
+  text-decoration: none;
+  color: #222;
+  font-size: 17px;
+  transition: color 0.2s;
+}
+
+.account-sidebar .account-nav a:hover,
+.account-sidebar .account-nav a.active {
+  color: #f0507a;
+}
+
+/* Cột phải */
+.account-content {
+  flex: 1;
+}
+
+.account-content h2 {
+  font-size: 26px;
+  font-weight: 400;
+  color: #222;
+  margin-bottom: 30px;
+}
+
+.account-content p {
+  font-size: 17px;
+  margin-bottom: 20px;
+  color: #222;
+}
+
+/* Form đổi mật khẩu */
+.account-form {
+  max-width: 450px;
+}
+
+.account-form .form-group {
+  margin-bottom: 20px;
+  display: flex;
+  flex-direction: column;
+}
+
+.account-form label {
+  font-size: 14px;
+  margin-bottom: 8px;
+}
+
+.account-form .form-control {
+  padding: 10px 15px;
+  border: 1px solid #e0e0e0;
+  border-radius: 4px;
+  font-size: 14px;
+  outline: none;
+}
+
+.account-form .form-control:focus {
+  border-color: #e86282;
+}
+
+/* Khách chưa đăng nhập */
+.account-guest {
+  text-align: center;
+  padding: 60px 0 100px;
+  font-size: 17px;
+}
+
+.account-guest-actions {
+  margin-top: 20px;
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  gap: 20px;
+}
+
+.account-guest-actions .btn-register {
+  text-decoration: none;
+  display: inline-block;
+}
+
+/* Mobile */
+@media (max-width: 768px) {
+  .account-wrapper {
+    flex-direction: column;
+    gap: 30px;
+  }
+  .account-sidebar {
+    flex: none;
+    width: 100%;
+  }
+}
