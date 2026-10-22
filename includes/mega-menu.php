@@ -70,22 +70,6 @@ require_once __DIR__ . '/functions.php';
     <?php endif; ?>
 </ul>
             </li>
-
-            <!-- 5. Tìm giày nhanh -->
-            <li class="nav-item has-dropdown">
-                <a href="#" class="nav-link">
-                    TÌM GIÀY NHANH <i class="fa-solid fa-chevron-down dropdown-arrow"></i>
-                </a>
-                <ul class="dropdown-menu simple-dropdown">
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?sole=tf">Giày đinh thấp (Sân cỏ nhân tạo
-                            TF)</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?sole=ag_fg">Giày đinh cao (AG / FG)</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?fit=wide">Giày chuyên cho chân bè</a></li>
-                    <li><a href="<?php echo BASE_URL; ?>/pages/category.php?feature=collared">Giày lưỡi gà liền (Cổ
-                            thun)</a></li>
-                </ul>
-            </li>
-
         </ul>
     </div>
 </nav>

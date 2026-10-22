@@ -1,0 +1,582 @@
+/* =====================================================
+   TRANG QUẢN TRỊ (dashboard)
+   ===================================================== */
+:root {
+    --brand: #c8143f;
+    --brand-light: #e0214d;
+    --ink: #121826;
+    --muted: #8a93a6;
+    --line: #eceef4;
+    --bg-light: #f8f9fc;
+}
+
+body {
+    font-family: 'Plus Jakarta Sans', 'Nunito', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+    background-color: var(--bg-light);
+    color: var(--ink);
+    margin: 0;
+    padding: 0;
+    overflow-x: hidden;
+}
+
+#wrapper {
+    display: flex;
+    min-height: 100vh;
+}
+
+/* ---------- Sidebar ---------- */
+#sidebar {
+    width: 260px;
+    flex-shrink: 0;
+    height: 100vh;
+    position: sticky;
+    top: 0;
+    overflow-y: auto;
+    background: linear-gradient(180deg, #c9264f 0%, #b8123a 45%, #7a1230 100%);
+    color: #fff;
+}
+
+#sidebar .sidebar-brand {
+    height: 72px;
+    padding: 0 18px;
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    text-decoration: none;
+    color: #fff;
+    border-bottom: 1px solid rgba(255, 255, 255, .14);
+}
+
+#sidebar .brand-logo {
+    width: 42px;
+    height: 42px;
+    flex-shrink: 0;
+    display: grid;
+    place-items: center;
+    background: #fff;
+    color: var(--brand);
+    border-radius: 12px;
+    font-weight: 800;
+    font-size: 14px;
+    letter-spacing: -.5px;
+    box-shadow: 0 0 0 3px rgba(255, 255, 255, .18);
+}
+
+#sidebar .brand-title {
+    display: block;
+    font-size: 15px;
+    font-weight: 800;
+    line-height: 1.2;
+    text-transform: uppercase;
+    letter-spacing: -.2px;
+}
+
+#sidebar .brand-sub {
+    display: block;
+    margin-top: 3px;
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    color: rgba(255, 255, 255, .8);
+}
+
+#sidebar .sidebar-heading {
+    color: rgba(255, 255, 255, .55);
+    font-size: 11px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    padding: 24px 22px 10px;
+    text-transform: uppercase;
+}
+
+#sidebar ul.nav {
+    flex-direction: column;
+    padding: 0 12px;
+    gap: 4px;
+}
+
+#sidebar .nav-item .nav-link {
+    display: flex;
+    align-items: center;
+    width: 100%;
+    padding: 11px 14px;
+    border-radius: 10px;
+    font-size: 14px;
+    font-weight: 600;
+    color: rgba(255, 255, 255, .92);
+    transition: background .15s;
+}
+
+#sidebar .nav-item .nav-link i {
+    width: 20px;
+    margin-right: 12px;
+    font-size: 15px;
+    text-align: center;
+}
+
+#sidebar .nav-item .nav-link:hover {
+    color: #fff;
+    background: rgba(255, 255, 255, .12);
+    text-decoration: none;
+}
+
+#sidebar .nav-item.active .nav-link {
+    background: #fff;
+    color: var(--brand);
+    font-weight: 700;
+    box-shadow: 0 6px 16px rgba(0, 0, 0, .12);
+}
+
+/* ---------- Nội dung ---------- */
+#content-wrapper {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+}
+
+.topbar {
+    height: 72px;
+    background: #fff;
+    border-bottom: 1px solid var(--line);
+    box-shadow: none;
+    display: flex;
+    align-items: center;
+    padding: 0 28px;
+}
+
+.user-toggle,
+.user-toggle:hover {
+    text-decoration: none;
+    color: var(--ink);
+}
+
+.user-toggle::after { display: none; }
+
+.user-info { text-align: right; margin-right: 12px; line-height: 1.25; }
+.user-info .user-name { display: block; font-size: 14px; font-weight: 700; color: var(--ink); }
+.user-info .user-status { display: block; font-size: 12px; font-weight: 600; color: #12a26a; }
+
+.user-avatar {
+    position: relative;
+    width: 42px;
+    height: 42px;
+    display: grid;
+    place-items: center;
+    border: 2px solid #e5486c;
+    border-radius: 12px;
+    background: #fff;
+    color: var(--brand);
+    font-weight: 800;
+    font-size: 16px;
+}
+
+.user-avatar::after {
+    content: "";
+    position: absolute;
+    right: -5px;
+    bottom: -5px;
+    width: 12px;
+    height: 12px;
+    border-radius: 50%;
+    background: #17b978;
+    border: 2px solid #fff;
+}
+
+.user-menu {
+    border: 0;
+    border-radius: 12px;
+    padding: 6px 0;
+    min-width: 210px;
+    box-shadow: 0 .5rem 1.5rem rgba(0, 0, 0, .15);
+    margin-top: 12px;
+}
+
+.user-menu .dropdown-item { padding: 11px 18px; font-size: 14px; font-weight: 600; color: #3a3b45; }
+.user-menu .dropdown-item i { color: #b7b9cc; }
+.user-menu .dropdown-item:hover { background: #fdf0f3; color: var(--brand); }
+.user-menu .dropdown-divider { margin: 4px 0; }
+
+.page-content { padding: 26px 32px 0; flex: 1; }
+
+.crumb {
+    font-size: 12px;
+    font-weight: 600;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+    color: var(--muted);
+}
+
+.crumb .sep { margin: 0 8px; }
+.crumb .current { color: var(--brand); }
+
+.page-title {
+    font-size: 30px;
+    font-weight: 800;
+    letter-spacing: -.6px;
+    color: var(--ink);
+    margin: 2px 0 22px;
+}
+
+/* ---------- Thẻ thống kê ---------- */
+.card-stat {
+    background: #fff;
+    border: 0;
+    border-radius: 16px;
+    box-shadow: 0 4px 18px rgba(30, 40, 80, .06);
+}
+
+.card-stat .card-body { padding: 20px 22px; }
+
+.border-left-emerald { border-left: 4px solid #10b981 !important; }
+.border-left-primary { border-left: 4px solid #2563eb !important; }
+.border-left-info    { border-left: 4px solid #0ea5e9 !important; }
+.border-left-indigo  { border-left: 4px solid #6366f1 !important; }
+.border-left-warning { border-left: 4px solid #f59e0b !important; }
+
+.card-stat.is-alert {
+    background: linear-gradient(135deg, #fffaf0, #fff5e2);
+    outline: 1px solid #fbe6b8;
+    outline-offset: -1px;
+}
+
+.stat-title {
+    display: flex;
+    align-items: center;
+    gap: 7px;
+    font-size: 12px;
+    font-weight: 800;
+    letter-spacing: .03em;
+    text-transform: uppercase;
+}
+
+.stat-title::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: currentColor;
+}
+
+.tone-emerald { color: #0f9f72; }
+.tone-blue    { color: #2563eb; }
+.tone-sky     { color: #0284c7; }
+.tone-indigo  { color: #5b5bd6; }
+.tone-amber   { color: #c2610c; }
+
+.stat-value {
+    font-size: 28px;
+    font-weight: 800;
+    letter-spacing: -.5px;
+    color: var(--ink);
+    margin-top: 6px;
+}
+
+.stat-icon {
+    width: 46px;
+    height: 46px;
+    display: grid;
+    place-items: center;
+    border-radius: 14px;
+    font-size: 19px;
+}
+
+.icon-emerald { background: #e8f8f2; color: #10b981; }
+.icon-blue    { background: #eaf1ff; color: #2563eb; }
+.icon-sky     { background: #e6f5fd; color: #0ea5e9; }
+.icon-indigo  { background: #ecebff; color: #6366f1; }
+.icon-amber   { background: #f59e0b; color: #fff; box-shadow: 0 6px 14px rgba(245, 158, 11, .35); }
+
+/* ---------- Chân trang quản trị ---------- */
+.admin-footer {
+    margin-top: 28px;
+    padding: 22px 0;
+    border-top: 1px solid #e6e8ef;
+    text-align: center;
+    font-size: 14px;
+    color: #98a1b3;
+}
+
+@media (max-width: 991px) {
+    #wrapper { flex-direction: column; }
+    #sidebar { width: 100%; height: auto; position: static; padding-bottom: 12px; }
+    .page-content { padding: 20px 16px 0; }
+}
+
+
+/* =====================================================
+   TRANG ĐĂNG NHẬP QUẢN TRỊ
+   Mọi luật đều nằm trong body.login-page (hoặc dùng tiền tố
+   login-) nên không đụng tới giao diện trang quản trị ở trên.
+   Kích thước tối ưu cho laptop ~14 inch (ThinkPad), vừa một màn hình.
+   ===================================================== */
+
+body.login-page {
+    --lg-bg: #170f14;
+    --lg-bar: #1a1216;
+    --lg-card: #231c20;
+    --lg-field: #191215;
+    --lg-brand: #c8143f;
+    --lg-brand-light: #e0214d;
+    --lg-pink: #f6b3c4;
+    --lg-pink-soft: #ffd9e2;
+    --lg-text: #f3e6ea;
+    --lg-muted: #b9a3ab;
+    --lg-faint: #86707a;
+
+    font-family: 'Manrope', Arial, sans-serif;
+    color: var(--lg-text);
+    background: var(--lg-bg);
+    display: flex;
+    flex-direction: column;
+    min-height: 100vh;
+    overflow-x: visible;
+}
+
+.login-page *,
+.login-page *::before,
+.login-page *::after { box-sizing: border-box; }
+
+/* Thanh trên cùng */
+.login-topbar {
+    height: 64px;
+    padding: 0 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: var(--lg-bar);
+}
+
+.login-brand { display: flex; align-items: center; gap: 10px; text-decoration: none; color: var(--lg-text); }
+
+.login-brand-logo {
+    width: 36px;
+    height: 36px;
+    background: #1d1519;
+    color: var(--lg-brand-light);
+    display: grid;
+    place-items: center;
+    font-weight: 800;
+    font-size: 11px;
+    letter-spacing: -.5px;
+    border-radius: 2px;
+}
+
+.login-brand-name { font-size: 17px; font-weight: 700; letter-spacing: -.2px; }
+
+.login-avatar {
+    width: 36px;
+    height: 36px;
+    border-radius: 10px;
+    background: var(--lg-pink);
+    color: #5b1430;
+    display: grid;
+    place-items: center;
+    font-size: 14px;
+    text-decoration: none;
+}
+
+/* Khu vực chính với quầng sáng đỏ */
+.login-main {
+    flex: 1;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    padding: 24px;
+    background:
+        radial-gradient(ellipse 55% 60% at 50% 40%, rgba(150, 20, 45, .38), transparent 70%),
+        var(--lg-bg);
+}
+
+.login-card {
+    width: 100%;
+    max-width: 480px;
+    background: var(--lg-card);
+    border-radius: 16px;
+    padding: 34px 40px 38px;
+    box-shadow: 0 24px 60px rgba(0, 0, 0, .35);
+    border-top: 1px solid rgba(255, 255, 255, .08);
+}
+
+.login-badge-wrap { text-align: center; margin-bottom: 16px; }
+
+.login-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 7px;
+    padding: 6px 16px;
+    border-radius: 999px;
+    background: #302830;
+    color: var(--lg-pink);
+    font-size: 11px;
+    font-weight: 700;
+    letter-spacing: .08em;
+    text-transform: uppercase;
+}
+
+.login-badge::before {
+    content: "";
+    width: 6px;
+    height: 6px;
+    border-radius: 50%;
+    background: #f08aa5;
+}
+
+.login-title {
+    text-align: center;
+    font-size: 30px;
+    line-height: 1.25;
+    font-weight: 800;
+    letter-spacing: -.8px;
+    color: var(--lg-pink-soft);
+    margin: 0 0 8px;
+}
+
+.login-sub {
+    text-align: center;
+    font-size: 14px;
+    line-height: 1.5;
+    color: #e8c9d2;
+    margin: 0 0 20px;
+}
+
+.login-alert {
+    background: rgba(200, 20, 63, .15);
+    border-left: 3px solid var(--lg-brand-light);
+    color: #ffb3c4;
+    padding: 10px 14px;
+    font-size: 13px;
+    line-height: 1.5;
+    border-radius: 6px;
+    margin-bottom: 14px;
+}
+
+.login-field { margin-bottom: 16px; }
+
+.login-label-row {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    margin-bottom: 7px;
+}
+
+.login-label-row label { font-size: 14px; font-weight: 700; color: var(--lg-pink-soft); margin: 0; }
+.login-label-row .login-hint { font-size: 12px; font-weight: 600; color: var(--lg-faint); }
+
+.login-input-wrap { position: relative; }
+
+.login-input-wrap > i.login-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--lg-pink);
+    font-size: 15px;
+    pointer-events: none;
+}
+
+.login-input-wrap input {
+    width: 100%;
+    height: 46px;
+    padding: 0 46px 0 46px;
+    border: 1px solid transparent;
+    border-radius: 8px;
+    background: var(--lg-field);
+    color: var(--lg-text);
+    font: inherit;
+    font-size: 15px;
+    font-weight: 500;
+    transition: border-color .15s, box-shadow .15s;
+}
+
+.login-input-wrap input::placeholder { color: #cdb6be; }
+
+.login-input-wrap input:focus {
+    outline: none;
+    border-color: var(--lg-brand-light);
+    box-shadow: 0 0 0 3px rgba(224, 33, 77, .25);
+}
+
+.login-toggle-pass {
+    position: absolute;
+    right: 6px;
+    top: 50%;
+    transform: translateY(-50%);
+    width: 34px;
+    height: 34px;
+    border: 0;
+    background: transparent;
+    color: var(--lg-pink);
+    font-size: 15px;
+    cursor: pointer;
+    border-radius: 8px;
+}
+
+.login-toggle-pass:hover { color: #fff; }
+.login-toggle-pass:focus-visible { outline: 2px solid var(--lg-brand-light); }
+
+.login-btn {
+    width: 100%;
+    height: 48px;
+    margin-top: 6px;
+    border: 0;
+    border-radius: 8px;
+    background: linear-gradient(90deg, #bf1640, #c8143f 60%, #b8123a);
+    color: var(--lg-pink-soft);
+    font: inherit;
+    font-size: 16px;
+    font-weight: 700;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 8px;
+    box-shadow: 0 8px 22px rgba(200, 20, 63, .3);
+    transition: filter .15s;
+}
+
+.login-btn:hover { filter: brightness(1.12); }
+.login-btn:focus-visible { outline: 3px solid rgba(246, 179, 196, .5); outline-offset: 3px; }
+
+/* Chân trang đăng nhập */
+.login-footer {
+    padding: 0 32px;
+    height: 56px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    flex-wrap: wrap;
+    background: var(--lg-bar);
+    font-size: 13px;
+    color: var(--lg-muted);
+}
+
+.login-footer nav { display: flex; gap: 24px; flex-wrap: wrap; }
+.login-footer a { color: var(--lg-muted); text-decoration: none; font-weight: 600; font-size: 13px; }
+.login-footer a:hover { color: var(--lg-pink-soft); }
+
+/* Màn hình thấp (laptop có thanh trình duyệt chiếm nhiều chỗ) */
+@media (max-height: 720px) {
+    .login-topbar { height: 56px; }
+    .login-footer { height: 48px; }
+    .login-main { padding: 16px; }
+    .login-card { padding: 26px 36px 30px; }
+    .login-title { font-size: 26px; }
+    .login-sub { margin-bottom: 14px; }
+    .login-field { margin-bottom: 12px; }
+    .login-input-wrap input { height: 42px; }
+    .login-btn { height: 44px; }
+}
+
+@media (max-width: 720px) {
+    .login-topbar, .login-footer { padding: 0 16px; }
+    .login-card { padding: 28px 20px; }
+    .login-title { font-size: 26px; }
+    .login-footer { height: auto; padding: 14px 16px; }
+    .login-footer nav { gap: 16px; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    .login-page * { transition: none !important; }
+}

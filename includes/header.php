@@ -12,7 +12,7 @@ $hotline = $settings['hotline'] ?? '0984828392';
         
         <!-- 1. Logo -->
         <a href="<?php echo BASE_URL; ?>/index.php" class="header-logo">
-            <img src="<?php echo BASE_URL; ?>./images/logo.png" alt="Định Lực Soccer Logo">
+            <img src="<?php echo BASE_URL; ?>./images/logo.png" alt="Văn Nhân Soccer Logo">
         </a>
 
         <!-- 2. Thanh tìm kiếm -->

@@ -2,10 +2,19 @@
 require_once dirname(__DIR__) . '/config/config.php';
 $settings = ['hotline' => '0984828392'];
 
-// Đã đăng nhập rồi thì chuyển thẳng sang trang khách hàng
-if (isset($_SESSION['user_id'])) {
-    header('Location: ' . BASE_URL . '/pages/account.php');
+// Hàm chuyển hướng theo role
+function redirectByRole($role) {
+    if ($role === 'admin') {
+        header('Location: ' . BASE_URL . '/admin/index.php');
+    } else {
+        header('Location: ' . BASE_URL . '/pages/account.php');
+    }
     exit;
+}
+
+// Đã đăng nhập rồi thì chuyển đúng trang theo role
+if (isset($_SESSION['user_id'])) {
+    redirectByRole($_SESSION['role'] ?? 'customer');
 }
 
 $error = '';
@@ -21,16 +30,19 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     if ($dbUser && password_verify($password, $dbUser['password'])) {
         session_regenerate_id(true);
         $_SESSION['user_id']    = $dbUser['user_id'];
-        $_SESSION['user_name']  = $dbUser['fullname'];   // sửa: fullname
+        $_SESSION['user_name']  = $dbUser['fullname'];
         $_SESSION['user_email'] = $dbUser['email'];
+        $_SESSION['role']       = $dbUser['role'] ?: 'customer';
 
-        header('Location: ' . BASE_URL . '/pages/account.php');
-        exit;
+        redirectByRole($_SESSION['role']);
     } else {
         $error = 'Email hoặc mật khẩu không đúng!';
     }
 }
 ?>
+<?php if (!empty($error)): ?>
+    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+<?php endif; ?>
 <?php if (!empty($error)): ?>
     <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
 <?php endif; ?>
@@ -87,7 +99,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </div>
     <div class="container register-container">
     <h1 class="page-title">ĐĂNG NHẬP</h1>
-
+</body>
+</html>
 <form action="" method="POST" class="register-form login-form">
 
         <div class="form-group">

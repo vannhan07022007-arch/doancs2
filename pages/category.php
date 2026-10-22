@@ -236,22 +236,6 @@ $display_products = array_slice($products, ($page - 1) * $limit, $limit);
     </ul>
 </li>
 
-                    <li class="has-submenu">
-                        <a href="javascript:void(0);" class="submenu-toggle">
-                            TÌM GIÀY NHANH <span class="arrow">&gt;</span>
-                        </a>
-                        <ul class="sub-menu">
-                            <!-- Đổi dropdown-menu thành sub-menu -->
-                            <li><a href="<?php echo BASE_URL; ?>/pages/category.php?sole=tf">Giày đinh thấp (Sân cỏ nhân
-                                    tạo TF)</a></li>
-                            <li><a href="<?php echo BASE_URL; ?>/pages/category.php?sole=ag_fg">Giày đinh cao (AG /
-                                    FG)</a></li>
-                            <li><a href="<?php echo BASE_URL; ?>/pages/category.php?fit=wide">Giày chuyên cho chân
-                                    bè</a></li>
-                            <li><a href="<?php echo BASE_URL; ?>/pages/category.php?feature=collared">Giày lưỡi gà liền
-                                    (Cổ thun)</a></li>
-                        </ul>
-                    </li>
                 </ul>
             </div>
 

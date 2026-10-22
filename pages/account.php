@@ -83,9 +83,6 @@ if (!in_array($tab, $allowedTabs)) {
                         <a href="?tab=orders" class="<?php echo $tab === 'orders' ? 'active' : ''; ?>">Đơn hàng của bạn</a>
                     </li>
                     <li>
-                        <a href="?tab=password" class="<?php echo $tab === 'password' ? 'active' : ''; ?>">Đổi mật khẩu</a>
-                    </li>
-                    <li>
                         <a href="?tab=address" class="<?php echo $tab === 'address' ? 'active' : ''; ?>">Sổ địa chỉ (<?php echo $addressCount; ?>)</a>
                     </li>
                     <li>
