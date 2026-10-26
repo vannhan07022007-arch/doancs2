@@ -5,10 +5,19 @@ if (session_status() === PHP_SESSION_NONE) {
 // Lùi về 2 cấp để trỏ đúng file cấu hình kết nối CSDL ở thư mục gốc
 require_once dirname(dirname(__DIR__)) . '/config/config.php';
 
-// Truy vấn lấy danh sách tài khoản khách hàng từ CSDL
+// Khởi tạo biến tìm kiếm an toàn để tránh lỗi Undefined variable
+$search = isset($_GET['search']) ? trim($_GET['search']) : '';
+
+// Truy vấn lấy danh sách tài khoản khách hàng từ CSDL (có hỗ trợ tìm kiếm)
 try {
-    $stmt = $db->prepare("SELECT * FROM users ORDER BY user_id DESC");
-    $stmt->execute();
+    if ($search !== '') {
+        $stmt = $db->prepare("SELECT * FROM users WHERE email LIKE ? OR fullname LIKE ? OR phone LIKE ? ORDER BY user_id DESC");
+        $searchTerm = "%" . $search . "%";
+        $stmt->execute([$searchTerm, $searchTerm, $searchTerm]);
+    } else {
+        $stmt = $db->prepare("SELECT * FROM users ORDER BY user_id DESC");
+        $stmt->execute();
+    }
     $customers = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $customers = [];
@@ -50,7 +59,23 @@ try {
                 <div class="card shadow mb-4">
                     <div class="card-header py-3">
                         <h6 class="m-0 font-weight-bold text-primary">Danh sách người dùng hệ thống</h6>
+                        <form action="" method="GET" class="form-inline">
+                            <div class="input-group input-group-sm">
+                                <input type="text" name="search" class="form-control" placeholder="Tìm theo tên, email, SĐT..." value="<?php echo htmlspecialchars($search); ?>" style="width: 250px;">
+                                <div class="input-group-append">
+                                    <button class="btn btn-primary" type="submit" title="Tìm kiếm">
+                                        <i class="fas fa-search"></i>
+                                    </button>
+                                    <?php if ($search !== ''): ?>
+                                        <a href="index.php" class="btn btn-outline-secondary" title="Hủy tìm kiếm">
+                                            <i class="fas fa-times"></i>
+                                        </a>
+                                    <?php endif; ?>
+                                </div>
+                            </div>
+                        </form>
                     </div>
+    
                     <div class="card-body">
                         <div class="table-responsive">
                             <table class="table table-bordered" width="100%" cellspacing="0">
@@ -74,9 +99,12 @@ try {
                                                 <td><?php echo htmlspecialchars($cus['phone'] ?? 'Chưa cập nhật'); ?></td>
                                                 <td><?php echo htmlspecialchars($cus['address'] ?? 'Chưa cập nhật'); ?></td>
                                                 <td>
-                                                    <a href="detail.php?id=<?php echo $cus['user_id']; ?>" class="btn btn-sm btn-info">
-                                                        <i class="fas fa-eye"></i> Chi tiết
-                                                    </a>
+                                                <a href="detail.php?id=<?php echo $cus['user_id']; ?>" class="btn btn-sm btn-warning text-white mr-1" title="Sửa">
+                                                <i class="fas fa-edit"></i> Sửa
+                                                </a>
+                                                <a href="detail.php?id=<?php echo $cus['user_id']; ?>&action=delete" class="btn btn-sm btn-danger" title="Xóa" onclick="return confirm('Bạn có chắc chắn muốn xóa tài khoản khách hàng này không?');">
+                                                <i class="fas fa-trash"></i> Xóa
+                                                </a>
                                                 </td>
                                             </tr>
                                         <?php endforeach; ?>
