@@ -8,8 +8,11 @@ $settings = ['hotline' => '0984828392'];
 
 $display_products = [];
 if (isset($db) && $db) {
-    // Truy vấn bằng PDO để lấy danh sách sản phẩm
-    $sql  = "SELECT product_id, product_name, product_code, brand, price, old_price, main_image FROM products ORDER BY product_id DESC LIMIT 18";
+    // Truy vấn bằng PDO kết hợp bảng brands qua brand_id, đổi tên thành 'brand' để code hiển thị bên dưới không bị ảnh hưởng
+    $sql  = "SELECT p.product_id, p.product_name, p.product_code, b.brand_name AS brand, p.price, p.old_price, p.main_image 
+             FROM products p 
+             LEFT JOIN brands b ON p.brand_id = b.brand_id 
+             ORDER BY p.product_id DESC LIMIT 18";
     $stmt = $db->query($sql);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 

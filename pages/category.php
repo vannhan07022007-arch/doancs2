@@ -5,92 +5,83 @@ if (session_status() === PHP_SESSION_NONE) {
 require_once dirname(__DIR__) . '/config/config.php';
 require_once dirname(__DIR__) . '/includes/functions.php';
 
-
 $settings = ['hotline' => '0984828392'];
-// Truy vấn lấy danh sách các hãng (brand) không bị trùng lặp từ bảng products
 
-
-
-// Truy vấn lấy danh sách các loại phụ kiện động từ database
+// Tạo URL giữ lại các bộ lọc hiện tại, chỉ đổi/bỏ một tham số
+function filterUrl($key, $value) {
+    $params = $_GET;
+    if (isset($params[$key]) && $params[$key] == $value) {
+        unset($params[$key]);          // bấm lại đúng mục đang chọn = bỏ lọc
+    } else {
+        $params[$key] = $value;
+    }
+    unset($params['page']);            // đổi bộ lọc thì về trang 1
+    return 'category.php?' . http_build_query($params);
+}
 
 // ==========================================
-// 1. NHẬN TẤT CẢ CÁC THAM SỐ TỪ URL (CHỈ NHẬN 1 LẦN DUY NHẤT)
+// 1. NHẬN CÁC THAM SỐ TỪ URL
 // ==========================================
 $category_id  = isset($_GET['id']) ? $_GET['id'] : null;
 $size_filter  = isset($_GET['size']) ? $_GET['size'] : null;
-$brand        = isset($_GET['brand']) ? $_GET['brand'] : null;
+$brand_filter = isset($_GET['brand']) ? $_GET['brand'] : null;   // TÊN hãng
 $ground       = isset($_GET['ground']) ? $_GET['ground'] : null;
 $price_filter = isset($_GET['price']) ? $_GET['price'] : null;
 $keyword      = isset($_GET['keyword']) ? trim($_GET['keyword']) : null;
 
 // ==========================================
-// 2. XÂY DỰNG CÂU LỆNH SQL KẾT HỢP TẤT CẢ CÁC BỘ LỌC VÀ TÌM KIẾM
+// 2. XÂY DỰNG CÂU LỆNH SQL
 // ==========================================
-$base_sql = " FROM products p";
+// JOIN bảng brands để lọc theo tên hãng (bảng products chỉ có brand_id)
+$base_sql = " FROM products p LEFT JOIN brands b ON p.brand_id = b.brand_id";
 $params = [];
 
-// Nếu có lọc size thì mới JOIN bảng product_sizes
 if (!empty($size_filter)) {
     $base_sql .= " JOIN product_sizes ps ON p.product_id = ps.product_id";
 }
 
 $base_sql .= " WHERE 1=1";
 
-// Lọc theo danh mục
 if (!empty($category_id)) {
     $base_sql .= " AND p.category_id = :category_id";
     $params[':category_id'] = $category_id;
 }
 
-// Lọc theo thương hiệu
-if (!empty($brand)) {
-    $base_sql .= " AND p.brand = :brand";
-    $params[':brand'] = $brand;
+if (!empty($brand_filter)) {
+    $base_sql .= " AND b.brand_name = :brand_name";
+    $params[':brand_name'] = $brand_filter;
 }
 
-// Lọc theo loại sân (dựa vào tên sản phẩm)
 if (!empty($ground)) {
     $base_sql .= " AND p.product_name LIKE :ground";
     $params[':ground'] = "%$ground%";
 }
 
-// Lọc theo size cụ thể
 if (!empty($size_filter)) {
     $base_sql .= " AND ps.size_value = :size";
     $params[':size'] = $size_filter;
 }
 
-// Lọc theo khoảng giá
 if (!empty($price_filter)) {
     switch ($price_filter) {
-        case 'under_300k':
-            $base_sql .= " AND p.price < 300000";
-            break;
-        case '300k_400k':
-            $base_sql .= " AND p.price BETWEEN 300000 AND 400000";
-            break;
-        case '400k_500k':
-            $base_sql .= " AND p.price BETWEEN 400000 AND 500000";
-            break;
-        case '500k_600k':
-            $base_sql .= " AND p.price BETWEEN 500000 AND 600000";
-            break;
-        case 'over_600k':
-            $base_sql .= " AND p.price > 600000";
-            break;
+        case 'under_300k': $base_sql .= " AND p.price < 300000"; break;
+        case '300k_400k':  $base_sql .= " AND p.price BETWEEN 300000 AND 400000"; break;
+        case '400k_500k':  $base_sql .= " AND p.price BETWEEN 400000 AND 500000"; break;
+        case '500k_600k':  $base_sql .= " AND p.price BETWEEN 500000 AND 600000"; break;
+        case 'over_600k':  $base_sql .= " AND p.price > 600000"; break;
     }
 }
 
-// Lọc theo từ khóa tìm kiếm (Tên hoặc mã sản phẩm)
 if (!empty($keyword)) {
-    $base_sql .= " AND (p.product_name LIKE :keyword OR p.product_code LIKE :keyword)";
-    $params[':keyword'] = "%$keyword%";
+    $base_sql .= " AND (p.product_name LIKE :keyword OR p.product_code LIKE :keyword2)";
+    $params[':keyword']  = "%$keyword%";
+    $params[':keyword2'] = "%$keyword%";
 }
 
 // ==========================================
 // 3. THỰC THI TRUY VẤN VÀ PHÂN TRANG
 // ==========================================
-$sql = "SELECT DISTINCT p.*" . $base_sql . " ORDER BY p.product_id DESC";
+$sql = "SELECT DISTINCT p.*, b.brand_name" . $base_sql . " ORDER BY p.product_id DESC";
 $stmt = $db->prepare($sql);
 $stmt->execute($params);
 $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
@@ -99,8 +90,7 @@ if (!is_array($products)) {
     $products = [];
 }
 
-// Thiết lập phân trang
-$limit = 10; // Số sản phẩm trên 1 trang
+$limit = 10;
 $total_products = count($products);
 $total_pages = $total_products > 0 ? ceil($total_products / $limit) : 1;
 
@@ -108,9 +98,30 @@ $page = isset($_GET['page']) ? (int)$_GET['page'] : 1;
 if ($page < 1) $page = 1;
 if ($page > $total_pages) $page = $total_pages;
 
-// Cắt mảng hiển thị cho trang hiện tại (đã sửa chuẩn công thức phân trang)
 $display_products = array_slice($products, ($page - 1) * $limit, $limit);
 
+// Tiêu đề trang theo danh mục / hãng đang xem
+$page_title = 'TẤT CẢ SẢN PHẨM';
+if (!empty($category_id)) {
+    $cat = getCategoryById($db, $category_id);
+    if ($cat) $page_title = mb_strtoupper($cat['name'], 'UTF-8');
+}
+if (!empty($brand_filter)) {
+    $page_title .= ' - ' . mb_strtoupper($brand_filter, 'UTF-8');
+}
+
+// Danh sách hãng cho sidebar
+$brands      = get_all_brands($db);
+$accessories = get_all_accessories($db);
+
+$price_options = [
+    'under_300k' => 'Giá dưới 300.000đ',
+    '300k_400k'  => '300.000đ - 400.000đ',
+    '400k_500k'  => '400.000đ - 500.000đ',
+    '500k_600k'  => '500.000đ - 600.000đ',
+    'over_600k'  => 'Giá trên 600.000đ',
+];
+$sizes_list = [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -120,10 +131,8 @@ $display_products = array_slice($products, ($page - 1) * $limit, $limit);
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Văn Nhân Soccer - Giày Bóng Đá Chính Hãng</title>
 
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- CSS Files -->
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/header.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/product-card.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/category.css">
@@ -135,9 +144,7 @@ $display_products = array_slice($products, ($page - 1) * $limit, $limit);
         font-family: Arial, sans-serif;
     }
 
-    body {
-        background-color: #f8f9fa;
-    }
+    body { background-color: #f8f9fa; }
 
     .container {
         max-width: 1200px;
@@ -152,6 +159,9 @@ $display_products = array_slice($products, ($page - 1) * $limit, $limit);
         color: #111;
         text-transform: uppercase;
     }
+
+    .price-item { text-decoration: none; color: #333; }
+    .price-item.active-price { font-weight: bold; color: #e91e63; }
     </style>
 </head>
 
@@ -159,205 +169,152 @@ $display_products = array_slice($products, ($page - 1) * $limit, $limit);
 
     <!-- 1. Header & Mega Menu -->
     <?php include_once dirname(__DIR__) . '/includes/header.php'; ?>
+
     <!-- Breadcrumb & Tiêu đề trang -->
     <div class="container">
         <div class="breadcrumb">
             <a href="<?php echo BASE_URL; ?>/index.php">Trang chủ</a>
             <span class="separator">&gt;</span>
-            <span class="current">TẤT CẢ SẢN PHẨM</span>
+            <span class="current"><?php echo htmlspecialchars($page_title); ?></span>
         </div>
 
-        <h2 class="main-page-title">TẤT CẢ SẢN PHẨM</h2>
+        <h2 class="main-page-title"><?php echo htmlspecialchars($page_title); ?></h2>
     </div>
+
     <div class="shop-layout">
 
-        <!-- CỘT TRÁI: Sidebar danh mục & kích cỡ -->
+        <!-- CỘT TRÁI: Sidebar -->
         <aside class="shop-sidebar">
             <div class="sidebar-box">
                 <h3 class="sidebar-title">DANH MỤC SẢN PHẨM</h3>
                 <ul class="sidebar-menu">
                     <li><a href="<?php echo BASE_URL; ?>/pages/category.php">TẤT CẢ SẢN PHẨM</a></li>
 
-                    <!-- Mục Giày Bóng Đá có menu con -->
+                    <!-- Giày bóng đá -->
                     <li class="has-submenu">
-    <div class="menu-link-wrapper" style="display: flex; align-items: center; justify-content: space-between;">
-        <!-- 1. Bấm vào chữ: Chuyển đến trang danh mục giày (id = 1), chỉ hiện giày -->
-        <a href="<?php echo BASE_URL; ?>/pages/category.php?id=1" class="category-main-link">
-            GIÀY BÓNG ĐÁ
-        </a>
-        
-        <!-- 2. Bấm vào mũi tên: Chỉ làm nhiệm vụ xổ menu con xuống -->
-        <span class="submenu-toggle arrow" style="cursor: pointer; padding: 0 10px;">&gt;</span>
-    </div>
+                        <div class="menu-link-wrapper" style="display: flex; align-items: center; justify-content: space-between;">
+                            <a href="<?php echo BASE_URL; ?>/pages/category.php?id=1" class="category-main-link">GIÀY BÓNG ĐÁ</a>
+                            <span class="submenu-toggle arrow" style="cursor: pointer; padding: 0 10px;">&gt;</span>
+                        </div>
 
-    <?php
-    $brands = get_all_brands($db);
-    ?>
-    <ul class="sub-menu" style="display: none;"> <!-- Mặc định ẩn menu con -->
-        <?php if (!empty($brands)): ?>
-        <?php foreach ($brands as $brand): ?>
-        <li>
-            <a href="<?php echo BASE_URL; ?>/pages/category.php?id=1&brand=<?php echo urlencode($brand); ?>">
-                Giày <?php echo htmlspecialchars($brand); ?>
-            </a>
-        </li>
-        <?php endforeach; ?>
-        <?php else: ?>
-        <li><a href="#">Chưa có hãng nào</a></li>
-        <?php endif; ?>
-    </ul>
-</li>
-                        <li class="has-submenu">
-    <div class="menu-link-wrapper" style="display: flex; align-items: center; justify-content: space-between;">
-        <!-- 1. Bấm vào chữ: Chuyển đến trang danh mục phụ kiện (id = 2), chỉ hiện phụ kiện -->
-        <a href="<?php echo BASE_URL; ?>/pages/category.php?id=2" class="category-main-link">
-            PHỤ KIỆN
-        </a>
-        
-        <!-- 2. Bấm vào mũi tên: Chỉ làm nhiệm vụ xổ menu con xuống -->
-        <span class="submenu-toggle arrow" style="cursor: pointer; padding: 0 10px;">&gt;</span>
-    </div>
+                        <ul class="sub-menu" style="display: none;">
+                            <?php if (!empty($brands)): ?>
+                                <?php foreach ($brands as $row): ?>
+                                <li>
+                                    <a href="<?php echo BASE_URL; ?>/pages/category.php?id=1&brand=<?php echo urlencode($row['brand_name']); ?>">
+                                        Giày <?php echo htmlspecialchars($row['brand_name']); ?>
+                                    </a>
+                                </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><a href="#">Chưa có hãng nào</a></li>
+                            <?php endif; ?>
+                        </ul>
+                    </li>
 
-    <?php 
-    $accessories = get_all_accessories($db); 
-    ?>
-    <ul class="sub-menu" style="display: none;"> <!-- Mặc định ẩn menu con -->
-        <?php if (!empty($accessories)): ?>
-        <?php foreach ($accessories as $item): ?>
-        <li>
-            <a href="<?php echo BASE_URL; ?>/pages/category.php?id=2&brand=<?php echo urlencode($item); ?>">
-                <?php echo htmlspecialchars($item); ?>
-            </a>
-        </li>
-        <?php endforeach; ?>
-        <?php else: ?>
-        <li><a href="#">Chưa có phụ kiện nào</a></li>
-        <?php endif; ?>
-    </ul>
-</li>
+                    <!-- Phụ kiện -->
+                    <li class="has-submenu">
+                        <div class="menu-link-wrapper" style="display: flex; align-items: center; justify-content: space-between;">
+                            <a href="<?php echo BASE_URL; ?>/pages/category.php?id=2" class="category-main-link">PHỤ KIỆN</a>
+                            <span class="submenu-toggle arrow" style="cursor: pointer; padding: 0 10px;">&gt;</span>
+                        </div>
 
+                        <ul class="sub-menu" style="display: none;">
+                            <?php if (!empty($accessories)): ?>
+                                <?php foreach ($accessories as $row): ?>
+                                <li>
+                                    <a href="<?php echo BASE_URL; ?>/pages/category.php?id=2&brand=<?php echo urlencode($row['brand_name']); ?>">
+                                        <?php echo htmlspecialchars($row['brand_name']); ?>
+                                    </a>
+                                </li>
+                                <?php endforeach; ?>
+                            <?php else: ?>
+                                <li><a href="#">Chưa có phụ kiện nào</a></li>
+                            <?php endif; ?>
+                        </ul>
+                    </li>
                 </ul>
             </div>
 
+            <!-- Theo kích cỡ (giữ lại id, brand, ground, price đang chọn) -->
             <div class="sidebar-box">
                 <h3 class="sidebar-title">THEO KÍCH CỠ</h3>
                 <div class="size-grid">
-                   <?php 
-$sizes_list = [34, 35, 36, 37, 38, 39, 40, 41, 42, 43, 44, 45];
-$current_id = $_GET['id'] ?? 1;
-$current_brand = isset($_GET['brand']) ? $_GET['brand'] : '';
-$current_ground = isset($_GET['ground']) ? $_GET['ground'] : '';
-
-foreach ($sizes_list as $s): 
-    // Giữ lại các bộ lọc cũ (id, brand, ground) nếu người dùng đã chọn trước đó
-    $url = "category.php?id=" . $current_id;
-    if (!empty($current_brand)) $url .= "&brand=" . urlencode($current_brand);
-    if (!empty($current_ground)) $url .= "&ground=" . urlencode($current_ground);
-    $url .= "&size=" . $s;
-?>
-    <a href="<?php echo $url; ?>" class="size-btn <?php echo (isset($_GET['size']) && $_GET['size'] == $s) ? 'active' : ''; ?>">
-        <?php echo $s; ?>
-    </a>
-<?php endforeach; ?>
-
+                    <?php foreach ($sizes_list as $s): ?>
+                        <a href="<?php echo filterUrl('size', $s); ?>"
+                           class="size-btn <?php echo (isset($_GET['size']) && $_GET['size'] == $s) ? 'active' : ''; ?>">
+                            <?php echo $s; ?>
+                        </a>
+                    <?php endforeach; ?>
                 </div>
             </div>
-            <!-- Khung bộ lọc Mức Giá -->
-            <div class="sidebar-box">
-    <h3 class="sidebar-title">MỨC GIÁ</h3>
-    <div class="price-filter-list" style="display: flex; flex-direction: column; gap: 8px;">
-        <?php 
-            // Hàm phụ trợ để giữ lại các bộ lọc khác (như danh mục, size, brand...) khi chuyển giá
-            function getPriceUrl($priceValue) {
-                $params = $_GET;
-                // Nếu bấm lại đúng mức giá đang chọn thì coi như bỏ lọc giá
-                if (isset($params['price']) && $params['price'] == $priceValue) {
-                    unset($params['price']);
-                } else {
-                    $params['price'] = $priceValue;
-                }
-                unset($params['page']); // Reset về trang 1 khi đổi bộ lọc
-                return "category.php?" . http_build_query($params);
-            }
-            
-            $current_price = $_GET['price'] ?? '';
-        ?>
 
-        <a href="<?php echo getPriceUrl('under_300k'); ?>" class="price-item <?php echo ($current_price == 'under_300k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == 'under_300k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
-            Giá dưới 300.000đ
-        </a>
-        <a href="<?php echo getPriceUrl('300k_400k'); ?>" class="price-item <?php echo ($current_price == '300k_400k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == '300k_400k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
-            300.000đ - 400.000đ
-        </a>
-        <a href="<?php echo getPriceUrl('400k_500k'); ?>" class="price-item <?php echo ($current_price == '400k_500k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == '400k_500k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
-            400.000đ - 500.000đ
-        </a>
-        <a href="<?php echo getPriceUrl('500k_600k'); ?>" class="price-item <?php echo ($current_price == '500k_600k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == '500k_600k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
-            500.000đ - 600.000đ
-        </a>
-        <a href="<?php echo getPriceUrl('over_600k'); ?>" class="price-item <?php echo ($current_price == 'over_600k') ? 'active-price' : ''; ?>" style="text-decoration: none; color: #333; <?php echo ($current_price == 'over_600k') ? 'font-weight: bold; color: #e91e63;' : ''; ?>">
-            Giá trên 600.000đ
-        </a>
-    </div>
-</div>
+            <!-- Mức giá -->
+            <div class="sidebar-box">
+                <h3 class="sidebar-title">MỨC GIÁ</h3>
+                <div class="price-filter-list" style="display: flex; flex-direction: column; gap: 8px;">
+                    <?php foreach ($price_options as $value => $label): ?>
+                        <a href="<?php echo filterUrl('price', $value); ?>"
+                           class="price-item <?php echo ($price_filter === $value) ? 'active-price' : ''; ?>">
+                            <?php echo $label; ?>
+                        </a>
+                    <?php endforeach; ?>
+                </div>
+            </div>
         </aside>
 
-        <!-- CỘT PHẢI: Nội dung sản phẩm -->
+        <!-- CỘT PHẢI: Sản phẩm -->
         <main class="shop-main">
             <div class="product-grid">
-    <?php 
-        if (!empty($display_products)) {
-                foreach ($display_products as $product) {
-                    include __DIR__ . '/../includes/product-card.php';
+                <?php
+                if (!empty($display_products)) {
+                    foreach ($display_products as $product) {
+                        include __DIR__ . '/../includes/product-card.php';
+                    }
+                } else {
+                    echo '<p style="padding: 20px; text-align: center; width: 100%;">Không tìm thấy sản phẩm phù hợp.</p>';
                 }
-            } else {
-                echo '<p style="padding: 20px; text-align: center; width: 100%;">Chưa có sản phẩm nào trong cơ sở dữ liệu shopbangiay.</p>';
-            }
-?>
-</div>
+                ?>
+            </div>
         </main>
-        
+
     </div>
+
+    <!-- Phân trang -->
     <?php if ($total_pages > 1): ?>
     <div class="pagination" style="display: flex; justify-content: center; align-items: center; gap: 6px; margin: 30px 0;">
-        <?php 
-        // Lấy tất cả tham số GET hiện tại (như id, brand, size, ground...) để khi bấm chuyển trang không bị mất bộ lọc
+        <?php
         $queryParams = $_GET;
-        
-        // Vòng lặp hiển thị các số trang từ 1 đến tổng số trang
-        for ($i = 1; $i <= $total_pages; $i++): 
+        for ($i = 1; $i <= $total_pages; $i++):
             $queryParams['page'] = $i;
-            $pageUrl = "category.php?" . http_build_query($queryParams);
-            // Kiểm tra nếu là trang hiện tại thì thêm class 'active'
+            $pageUrl  = 'category.php?' . http_build_query($queryParams);
             $isActive = ($page == $i) ? 'active' : '';
         ?>
             <a href="<?php echo $pageUrl; ?>" class="page-item <?php echo $isActive; ?>"><?php echo $i; ?></a>
         <?php endfor; ?>
 
-        <!-- Nút chuyển trang tiếp theo (Next) -->
         <?php if ($page < $total_pages): ?>
-            <?php 
+            <?php
                 $queryParams['page'] = $page + 1;
-                $nextUrl = "category.php?" . http_build_query($queryParams);
+                $nextUrl = 'category.php?' . http_build_query($queryParams);
             ?>
             <a href="<?php echo $nextUrl; ?>" class="page-item next">
                 <i class="fa-solid fa-angle-right"></i><i class="fa-solid fa-angle-right"></i>
             </a>
         <?php endif; ?>
     </div>
-<?php endif; ?>
-    </div>
+    <?php endif; ?>
+
     <script>
     document.querySelectorAll('.submenu-toggle').forEach(toggle => {
-    toggle.addEventListener('click', function(e) {
-        e.preventDefault();
-        // Tìm thẻ ul.sub-menu ngay bên cạnh để ẩn/hiện
-        const subMenu = this.closest('li.has-submenu').querySelector('.sub-menu');
-        if (subMenu) {
-            subMenu.style.display = subMenu.style.display === 'block' ? 'none' : 'block';
-        }
+        toggle.addEventListener('click', function (e) {
+            e.preventDefault();
+            const subMenu = this.closest('li.has-submenu').querySelector('.sub-menu');
+            if (subMenu) {
+                subMenu.style.display = subMenu.style.display === 'block' ? 'none' : 'block';
+            }
+        });
     });
-});
     </script>
 </body>
 

@@ -22,7 +22,8 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
         if (isset($_SESSION['cart'][$cart_key])) {
             $_SESSION['cart'][$cart_key]['quantity'] += $qty;
         } else {
-            $stmt_cart = $db->prepare("SELECT * FROM products WHERE product_id = ?");
+            // Lấy thông tin sản phẩm kết hợp tên hãng từ bảng brands
+            $stmt_cart = $db->prepare("SELECT p.*, b.brand_name FROM products p LEFT JOIN brands b ON p.brand_id = b.brand_id WHERE p.product_id = ?");
             $stmt_cart->execute([$p_id]);
             $prod_info = $stmt_cart->fetch(PDO::FETCH_ASSOC);
 
@@ -32,6 +33,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
                     'product_name' => $prod_info['product_name'],
                     'price'        => $prod_info['price'],
                     'main_image'   => $prod_info['main_image'],
+                    'brand_name'   => $prod_info['brand_name'] ?? '',
                     'size'         => $size,
                     'quantity'     => $qty
                 ];
@@ -45,8 +47,6 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST' && isset($_POST['add_to_cart'])) {
     }
 }
 
-// Giả sử file kết nối database của bạn được include ở đây (ví dụ: require_once dirname(__DIR__) . '/config/database.php';)
-
 $settings = ['hotline' => '0984828392'];
 
 // ==========================================
@@ -56,8 +56,8 @@ $product_id = isset($_GET['id']) && $_GET['id'] !== '' ? (int)$_GET['id'] : 0;
 $is_detail = ($product_id > 0);
 
 if ($is_detail) {
-    // 1. Lấy thông tin chi tiết sản phẩm từ database
-    $stmt = $db->prepare("SELECT * FROM products WHERE product_id = ?");
+    // 1. Lấy thông tin chi tiết sản phẩm kết hợp bảng brands để lấy tên hãng (`brand_name`)
+    $stmt = $db->prepare("SELECT p.*, b.brand_name FROM products p LEFT JOIN brands b ON p.brand_id = b.brand_id WHERE p.product_id = ?");
     $stmt->execute([$product_id]);
     $product = $stmt->fetch(PDO::FETCH_ASSOC);
 
@@ -67,16 +67,16 @@ if ($is_detail) {
     }
 
     // 2. Lấy danh sách size của sản phẩm này
-    $size_stmt = $db->prepare("SELECT size_value FROM product_sizes WHERE product_id = ? ORDER BY size_value ASC");
+    $size_stmt = $db->prepare("SELECT DISTINCT size_value FROM product_sizes WHERE product_id = ? ORDER BY size_value ASC");
     $size_stmt->execute([$product_id]);
     $sizes = $size_stmt->fetchAll(PDO::FETCH_COLUMN);
 
-    // 3. Lấy sản phẩm cùng loại (cùng category_id)
-    $related_stmt = $db->prepare("SELECT * FROM products WHERE category_id = ? AND product_id != ? LIMIT 5");
+    // 3. Lấy sản phẩm cùng loại (cùng category_id) kết hợp bảng brands
+    $related_stmt = $db->prepare("SELECT p.*, b.brand_name FROM products p LEFT JOIN brands b ON p.brand_id = b.brand_id WHERE p.category_id = ? AND p.product_id != ? LIMIT 5");
     $related_stmt->execute([$product['category_id'], $product_id]);
     $related_products = $related_stmt->fetchAll(PDO::FETCH_ASSOC);
 } else {
-    // ĐÂY LÀ PHẦN CODE LỌC / HIỂN THỊ DANH SÁCH CŨ CỦA BẠN (nếu không truyền id sản phẩm)
+    // ĐÂY LÀ PHẦN CODE LỌC / HIỂN THỊ DANH SÁCH CỦA BẠN (nếu không truyền id sản phẩm)
     // ...
 }
 ?>
@@ -128,7 +128,7 @@ if ($is_detail) {
                 <!-- Thông tin & Chọn size -->
                 <div style="flex: 1.2;">
                     <h1 style="font-size: 24px; color: #333; margin-bottom: 10px;"><?php echo htmlspecialchars($product['product_name']); ?></h1>
-                    <p style="font-size: 14px; color: #666; margin-bottom: 8px;">Thương hiệu: <span style="color: #e91e63; font-weight: bold;"><?php echo htmlspecialchars($product['brand']); ?></span></p>
+                    <p style="font-size: 14px; color: #666; margin-bottom: 8px;">Thương hiệu: <span style="color: #e91e63; font-weight: bold;"><?php echo htmlspecialchars($product['brand_name']); ?></span></p>
                     <p style="font-size: 14px; color: #666; margin-bottom: 15px;">Mã SP: <?php echo htmlspecialchars($product['product_code']); ?></p>
 
                     <!-- Giá tiền -->
