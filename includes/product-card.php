@@ -18,12 +18,12 @@ if (isset($db)) {
     $connection = $pdo;
 }
 
-// 4. Truy vấn lấy danh sách size và stock từ bảng product_sizes
+// 4. Truy vấn lấy danh sách size duy nhất và tổng tồn kho của từng size
 $sizes = [];
 if ($current_product_id > 0 && $connection) {
-    $stmt = $connection->prepare("SELECT size_value, stock FROM product_sizes WHERE product_id = ?");
+    $stmt = $connection->prepare("SELECT size_value, SUM(stock) AS stock FROM product_sizes WHERE product_id = ? GROUP BY size_value ORDER BY size_value ASC");
     $stmt->execute([$current_product_id]);
-    $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC);
+    $sizes = $stmt->fetchAll(PDO::FETCH_ASSOC); // Dùng FETCH_ASSOC để khớp với mảng $item['size_value'] và $item['stock'] ở dưới
 }
 ?>
 

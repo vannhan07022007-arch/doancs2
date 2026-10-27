@@ -1,23 +1,22 @@
 <?php
+if (session_status() === PHP_SESSION_NONE) {
+    session_start();
+}
 require_once dirname(__DIR__) . '/config/config.php';
 $settings = ['hotline' => '0984828392'];
 
-// Hàm chuyển hướng theo role
-function redirectByRole($role) {
-    if ($role === 'admin') {
-        header('Location: ' . BASE_URL . '/admin/index.php');
+// Đã đăng nhập rồi thì chuyển đúng trang theo role
+if (isset($_SESSION['user_id'])) {
+    if (($_SESSION['role'] ?? '') === 'admin') {
+        header('Location: ' . BASE_URL . '/Admin/index.php');
     } else {
         header('Location: ' . BASE_URL . '/pages/account.php');
     }
     exit;
 }
 
-// Đã đăng nhập rồi thì chuyển đúng trang theo role
-if (isset($_SESSION['user_id'])) {
-    redirectByRole($_SESSION['role'] ?? 'customer');
-}
-
 $error = '';
+$email = '';
 
 if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $email    = trim($_POST['email'] ?? '');
@@ -27,37 +26,34 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     $stmt->execute([$email]);
     $dbUser = $stmt->fetch(PDO::FETCH_ASSOC);
 
-    if ($dbUser && password_verify($password, $dbUser['password'])) {
+    $role = $dbUser['role'] ?? '';
+
+    // Chỉ khách hàng mới được đăng nhập ở đây; admin phải dùng trang đăng nhập quản trị
+    if ($dbUser && password_verify($password, $dbUser['password']) && $role !== 'admin') {
         session_regenerate_id(true);
         $_SESSION['user_id']    = $dbUser['user_id'];
         $_SESSION['user_name']  = $dbUser['fullname'];
         $_SESSION['user_email'] = $dbUser['email'];
-        $_SESSION['role']       = $dbUser['role'] ?: 'customer';
+        $_SESSION['role']       = $role ?: 'customer';
 
-        redirectByRole($_SESSION['role']);
-    } else {
-        $error = 'Email hoặc mật khẩu không đúng!';
+        header('Location: ' . BASE_URL . '/pages/account.php');
+        exit;
     }
+
+    // Thông báo chung, không cho biết email có phải tài khoản admin hay không
+    $error = 'Email hoặc mật khẩu không đúng!';
 }
 ?>
-<?php if (!empty($error)): ?>
-    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
-<?php endif; ?>
-<?php if (!empty($error)): ?>
-    <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
-<?php endif; ?>
 <!DOCTYPE html>
 <html lang="vi">
 
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Văn Nhân Soccer - Giày Bóng Đá Chính Hãng</title>
+    <title>Đăng nhập - Văn Nhân Soccer</title>
 
-    <!-- Font Awesome Icons -->
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
 
-    <!-- CSS Files -->
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/header.css">
     <link rel="stylesheet" href="<?php echo BASE_URL; ?>/assets/css/register-login.css">
     <style>
@@ -68,9 +64,7 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
         font-family: Arial, sans-serif;
     }
 
-    body {
-        background-color: #f8f9fa;
-    }
+    body { background-color: #f8f9fa; }
 
     .container {
         max-width: 1200px;
@@ -88,34 +82,43 @@ if ($_SERVER['REQUEST_METHOD'] === 'POST') {
     </style>
 </head>
 
-<body> 
-     <?php include_once dirname(__DIR__) . '/includes/header.php'; ?> 
-     <div class="container">
+<body>
+    <?php include_once dirname(__DIR__) . '/includes/header.php'; ?>
+
+    <div class="container">
         <div class="breadcrumb">
             <a href="<?php echo BASE_URL; ?>/index.php">Trang chủ</a>
             <span class="separator">&gt;</span>
-            <span class="current">đăng nhập</span>
+            <span class="current">Đăng nhập</span>
         </div>
     </div>
+
     <div class="container register-container">
-    <h1 class="page-title">ĐĂNG NHẬP</h1>
+        <h1 class="page-title">ĐĂNG NHẬP</h1>
+
+        <?php if ($error !== ''): ?>
+            <div class="alert alert-error"><?php echo htmlspecialchars($error); ?></div>
+        <?php endif; ?>
+
+        <form action="" method="POST" class="register-form login-form">
+
+            <div class="form-group">
+                <label for="email">Email *</label>
+                <input type="email" id="email" name="email" required class="form-control"
+                       value="<?php echo htmlspecialchars($email); ?>">
+            </div>
+
+            <div class="form-group">
+                <label for="password">Mật khẩu *</label>
+                <input type="password" id="password" name="password" required class="form-control">
+            </div>
+
+            <div class="form-actions">
+                <button type="submit" class="btn-register">Đăng nhập</button>
+                <a href="register.php" class="login-link">Đăng ký</a>
+            </div>
+        </form>
+    </div>
 </body>
+
 </html>
-<form action="" method="POST" class="register-form login-form">
-
-        <div class="form-group">
-            <label for="email">Email *</label>
-            <input type="email" id="email" name="email" required class="form-control">
-        </div>
-
-        <div class="form-group">
-            <label for="password">Mật khẩu *</label>
-            <input type="password" id="password" name="password" required class="form-control">
-        </div>
-
-        <div class="form-actions">
-            <button type="submit" class="btn-register">Đăng nhập</button>
-            <a href="register.php" class="login-link">Đăng ký</a>
-        </div>
-    </form>
-</div>
