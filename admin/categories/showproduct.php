@@ -1,9 +1,9 @@
 <?php 
-if (session_status() === PHP_SESSION_NONE) {
-    session_start();
-}
+
 // Lùi về 2 cấp để trỏ đúng file cấu hình kết nối CSDL ở thư mục gốc
 require_once dirname(dirname(__DIR__)) . '/config/config.php';
+require_once dirname(dirname(__DIR__)) . '/config/auth.php';
+requireAdmin();
 
 // Lấy tên hãng từ URL
 $brand = isset($_GET['brand']) ? trim($_GET['brand']) : '';
@@ -15,11 +15,16 @@ if ($brand === '') {
 
 // Truy vấn lấy danh sách sản phẩm thuộc đúng hãng được chọn
 try {
-    $stmt = $db->prepare("SELECT * FROM products WHERE brand = ? ORDER BY product_id DESC");
+    $stmt = $db->prepare("SELECT p.*, b.brand_name
+                          FROM products p
+                          JOIN brands b ON p.brand_id = b.brand_id
+                          WHERE b.brand_name = ?
+                          ORDER BY p.product_id DESC");
     $stmt->execute([$brand]);
     $products = $stmt->fetchAll(PDO::FETCH_ASSOC);
 } catch (PDOException $e) {
     $products = [];
+    $loi = $e->getMessage();   // tạm thời để xem lỗi khi chạy thử
 }
 ?>
 <!DOCTYPE html>

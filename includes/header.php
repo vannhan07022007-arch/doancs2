@@ -112,7 +112,7 @@ $hotline = $settings['hotline'] ?? '0984828392';
                 <span class="total-label">Tổng tiền:</span>
                 <span class="total-price"><?php echo number_format($total_price, 0, ',', '.'); ?>đ</span>
             </div>
-            <a href="cart.php" class="btn-checkout">Xem giỏ hàng & Thanh toán</a>
+            <a href="<?php echo BASE_URL; ?>/pages/cart.php" class="btn-checkout">Xem giỏ hàng & Thanh toán</a>
         </div>
     </div>
 </div>

@@ -1,5 +1,9 @@
 <?php
 if (session_status() === PHP_SESSION_NONE) {
+    // Các trang trong thư mục admin dùng phiên riêng
+    if (stripos($_SERVER['SCRIPT_NAME'] ?? '', '/admin/') !== false) {
+        session_name('VN_ADMIN');
+    }
     session_start();
 }
 

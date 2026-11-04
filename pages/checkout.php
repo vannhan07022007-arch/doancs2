@@ -4,14 +4,22 @@ if (session_status() === PHP_SESSION_NONE) {
 }
 require_once dirname(__DIR__) . '/config/config.php';
 
-// Kiểm tra giỏ hàng có sản phẩm không
-if (empty($_SESSION['cart'])) {
+// Chế độ "Mua ngay": chỉ thanh toán 1 sản phẩm vừa chọn, không đụng tới giỏ hàng.
+// Vào trang này theo cách thường (từ giỏ hàng) thì bỏ sản phẩm mua ngay còn sót lại.
+$isBuyNow = (($_GET['mode'] ?? '') === 'buy_now') && !empty($_SESSION['buy_now']);
+if (!$isBuyNow) {
+    unset($_SESSION['buy_now']);
+}
+$items = $isBuyNow ? $_SESSION['buy_now'] : ($_SESSION['cart'] ?? []);
+
+// Không có sản phẩm nào để thanh toán thì quay về giỏ hàng
+if (empty($items)) {
     header("Location: cart.php");
     exit;
 }
 
 $total_price = 0;
-foreach ($_SESSION['cart'] as $item) {
+foreach ($items as $item) {
     $total_price += $item['price'] * $item['quantity'];
 }
 ?>
@@ -141,6 +149,16 @@ foreach ($_SESSION['cart'] as $item) {
         .btn-order:hover {
             background: #be123c;
         }
+        .buynow-tag {
+            display: inline-block;
+            background: #fde8ee;
+            color: #c0153f;
+            font-size: 12px;
+            font-weight: bold;
+            padding: 2px 8px;
+            border-radius: 999px;
+            margin-left: 6px;
+        }
         @media (max-width: 768px) {
             .checkout-wrapper {
                 grid-template-columns: 1fr;
@@ -154,6 +172,12 @@ foreach ($_SESSION['cart'] as $item) {
 </head>
 <body>
 
+<!-- Form bao trọn cả hai cột để nút ĐẶT HÀNG ở cột phải vẫn gửi được dữ liệu cột trái -->
+<form action="process-order.php" method="POST">
+<?php if ($isBuyNow): ?>
+    <input type="hidden" name="mode" value="buy_now">
+<?php endif; ?>
+
 <div class="checkout-wrapper">
     <!-- CỘT TRÁI: THÔNG TIN KHÁCH HÀNG & THANH TOÁN -->
     <div class="checkout-left">
@@ -163,79 +187,81 @@ foreach ($_SESSION['cart'] as $item) {
             </a>
         </div>
 
-        <form action="process-order.php" method="POST">
-            <h3 class="section-title">Thông tin nhận hàng</h3>
-            <?php if (!empty($_SESSION['checkout_error'])): ?>
-    <div style="background:#fde8ee;color:#c0153f;padding:12px 16px;border-radius:4px;margin-bottom:15px;">
-        <?php echo htmlspecialchars($_SESSION['checkout_error']); unset($_SESSION['checkout_error']); ?>
-    </div>
-<?php endif; ?>
-            
-            <div class="form-group">
-                <input type="email" name="email" class="form-control" placeholder="Email (tùy chọn)" value="<?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?>">
+        <h3 class="section-title">Thông tin nhận hàng</h3>
+        <?php if (!empty($_SESSION['checkout_error'])): ?>
+            <div style="background:#fde8ee;color:#c0153f;padding:12px 16px;border-radius:4px;margin-bottom:15px;">
+                <?php echo htmlspecialchars($_SESSION['checkout_error']); unset($_SESSION['checkout_error']); ?>
             </div>
-            <div class="form-group">
-                <input type="text" name="fullname" class="form-control" required placeholder="Họ và tên">
-            </div>
-            <div class="form-group">
-                <input type="text" name="phone" class="form-control" required placeholder="Số điện thoại">
-            </div>
-            <div class="form-group">
-                <input type="text" name="address" class="form-control" required placeholder="Địa chỉ cụ thể (Số nhà, tên đường...)">
-            </div>
+        <?php endif; ?>
 
-            <div class="form-row">
-                <div class="form-group">
-                    <select name="province" class="form-select" required>
-                        <option value="">Tỉnh thành ---</option>
-                        <option value="Đà Nẵng">Đà Nẵng</option>
-                        <option value="Quảng Nam">Quảng Nam</option>
-                        <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <select name="district" class="form-select" required>
-                        <option value="">Quận huyện ---</option>
-                        <option value="Hải Châu">Hải Châu</option>
-                        <option value="Thanh Khê">Thanh Khê</option>
-                        <option value="Ngũ Hành Sơn">Ngũ Hành Sơn</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <select name="ward" class="form-select" required>
-                        <option value="">Phường xã ---</option>
-                        <option value="Thạc Gián">Thạc Gián</option>
-                        <option value="Hòa Hải">Hòa Hải</option>
-                    </select>
-                </div>
-            </div>
+        <div class="form-group">
+            <input type="email" name="email" class="form-control" placeholder="Email (tùy chọn)" value="<?php echo htmlspecialchars($_SESSION['user_email'] ?? ''); ?>">
+        </div>
+        <div class="form-group">
+            <input type="text" name="fullname" class="form-control" required placeholder="Họ và tên">
+        </div>
+        <div class="form-group">
+            <input type="text" name="phone" class="form-control" required placeholder="Số điện thoại">
+        </div>
+        <div class="form-group">
+            <input type="text" name="address" class="form-control" required placeholder="Địa chỉ cụ thể (Số nhà, tên đường...)">
+        </div>
 
-            <h3 class="section-title" style="margin-top: 30px;">Vận chuyển</h3>
-            <div class="shipping-box">
-                <p style="margin: 0; color: #666; font-size: 14px;"><i class="fa-solid fa-truck" style="margin-right: 8px; color: #e11d48;"></i> Vui lòng nhập thông tin giao hàng để tính phí vận chuyển.</p>
+        <div class="form-row">
+            <div class="form-group">
+                <select name="province" class="form-select" required>
+                    <option value="">Tỉnh thành ---</option>
+                    <option value="Đà Nẵng">Đà Nẵng</option>
+                    <option value="Quảng Nam">Quảng Nam</option>
+                    <option value="Hồ Chí Minh">TP. Hồ Chí Minh</option>
+                </select>
             </div>
+            <div class="form-group">
+                <select name="district" class="form-select" required>
+                    <option value="">Quận huyện ---</option>
+                    <option value="Hải Châu">Hải Châu</option>
+                    <option value="Thanh Khê">Thanh Khê</option>
+                    <option value="Ngũ Hành Sơn">Ngũ Hành Sơn</option>
+                </select>
+            </div>
+            <div class="form-group">
+                <select name="ward" class="form-select" required>
+                    <option value="">Phường xã ---</option>
+                    <option value="Thạc Gián">Thạc Gián</option>
+                    <option value="Hòa Hải">Hòa Hải</option>
+                </select>
+            </div>
+        </div>
 
-            <h3 class="section-title">Thanh toán</h3>
-<div class="payment-box">
-    <label class="payment-method">
-        <input type="radio" name="payment_method" value="cod" checked>
-        <span>Thanh toán khi nhận hàng (COD)</span>
-    </label>
-</div>
+        <h3 class="section-title" style="margin-top: 30px;">Vận chuyển</h3>
+        <div class="shipping-box">
+            <p style="margin: 0; color: #666; font-size: 14px;"><i class="fa-solid fa-truck" style="margin-right: 8px; color: #e11d48;"></i> Vui lòng nhập thông tin giao hàng để tính phí vận chuyển.</p>
+        </div>
+
+        <h3 class="section-title">Thanh toán</h3>
+        <div class="payment-box">
+            <label class="payment-method">
+                <input type="radio" name="payment_method" value="cod" checked>
+                <span>Thanh toán khi nhận hàng (COD)</span>
+            </label>
+        </div>
     </div>
 
     <!-- CỘT PHẢI: TÓM TẮT ĐƠN HÀNG -->
     <div class="checkout-right">
-        <h3 class="section-title">Đơn hàng (<?php echo count($_SESSION['cart']); ?> sản phẩm)</h3>
-        
+        <h3 class="section-title">
+            Đơn hàng (<?php echo count($items); ?> sản phẩm)
+            <?php if ($isBuyNow): ?><span class="buynow-tag">Mua ngay</span><?php endif; ?>
+        </h3>
+
         <div class="checkout-products-list">
-            <?php foreach ($_SESSION['cart'] as $item): ?>
+            <?php foreach ($items as $item): ?>
                 <div class="checkout-product-item">
                     <div class="product-info-mini">
                         <img src="<?php echo BASE_URL . '/' . htmlspecialchars($item['main_image']); ?>" alt="">
                         <div>
                             <div style="font-size: 14px; font-weight: 500; color: #333;"><?php echo htmlspecialchars($item['product_name']); ?></div>
-                            <div style="font-size: 12px; color: #666;">Size: <?php echo htmlspecialchars($item['size']); ?> (SL: <?php echo $item['quantity']; ?>)</div>
+                            <div style="font-size: 12px; color: #666;">Size: <?php echo htmlspecialchars($item['size']); ?> (SL: <?php echo (int)$item['quantity']; ?>)</div>
                         </div>
                     </div>
                     <div style="font-size: 14px; font-weight: bold; color: #333;">
@@ -258,12 +284,17 @@ foreach ($_SESSION['cart'] as $item) {
             <span><?php echo number_format($total_price, 0, ',', '.'); ?>đ</span>
         </div>
 
-        <a href="cart.php" style="display: inline-block; margin-top: 15px; color: #2563eb; text-decoration: none; font-size: 14px;"><i class="fa-solid fa-chevron-left"></i> Quay về giỏ hàng</a>
+        <?php if ($isBuyNow): ?>
+            <a href="javascript:history.back()" style="display: inline-block; margin-top: 15px; color: #2563eb; text-decoration: none; font-size: 14px;"><i class="fa-solid fa-chevron-left"></i> Quay lại sản phẩm</a>
+        <?php else: ?>
+            <a href="cart.php" style="display: inline-block; margin-top: 15px; color: #2563eb; text-decoration: none; font-size: 14px;"><i class="fa-solid fa-chevron-left"></i> Quay về giỏ hàng</a>
+        <?php endif; ?>
 
         <button type="submit" class="btn-order">ĐẶT HÀNG</button>
-        </form>
     </div>
 </div>
+
+</form>
 
 </body>
 </html>
